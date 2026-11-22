@@ -275,6 +275,7 @@ main{background:transparent!important}
 <section class="panel wallet"><div class="heading"><h2>🪙 Minha carteira</h2><span class="pill">Moedas e diamantes</span></div><div class="wallet-balances"><div><div class="big" id="coinBalance">0 🪙</div><small>Moedas</small></div><div class="diamond-balance"><div class="big" id="diamondBalance">0 💎</div><small>Diamantes</small></div></div><p class="note">As atividades concedem moedas e XP. As batalhas concedem exclusivamente diamantes, usados no RPG.</p></section>
 <section class="panel game-panel" id="ibrahimGame">
 <div class="game-title"><div><span class="game-kicker">MUNDO DE IBRAHIM</span><h2>🗺️ Aventura do dia</h2></div><span class="game-badge">FASE <b id="gameStage">1</b></span></div>
+<div class="phase-cover" aria-label="Ibrahim, seu cachorro e o Guardião da Floresta na Floresta Encantada"><img class="phase-cover-ibrahim" src="assets/ibrahim_idle.png" alt="Ibrahim"><img class="phase-cover-dog" src="assets/companion_dog.png" alt="Cachorro companheiro"><img class="phase-cover-boss" src="assets/enemy_guardian.webp" alt="Guardião da Floresta"><span>FLORESTA ENCANTADA · FASE 1</span></div>
 <button class="explore-launch" id="openExploreMode" type="button" onclick="openIbrahimExploration()"><span>🌿 EXPLORAR O MUNDO<small>Ande pela floresta e encontre criaturas!</small></span><span>➜</span></button>
 <div class="explore-screen" id="ibrahimExploreScreen" hidden>
  <div class="explore-top"><b>🌳 Floresta Encantada</b><button class="explore-exit" type="button" onclick="closeIbrahimExploration()">← Voltar</button></div>
@@ -284,6 +285,15 @@ main{background:transparent!important}
  <div class="explore-status" id="exploreStatus">A floresta está tranquila... por enquanto.</div>
 </div>
 <style id="exploration-mode-style">
+.phase-cover{position:relative;height:210px;margin:12px 0 4px;border:4px solid #fff;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#8bd7ff,#6aa94d);box-shadow:0 5px 16px #143c2b30}
+.phase-cover:before{content:"";position:absolute;inset:0;background:url("assets/forest_bg.jpg") center/cover;filter:saturate(1.08)}
+.phase-cover img{position:absolute;z-index:1;object-fit:contain;bottom:4px;max-height:84%;width:30%;height:82%}
+.phase-cover-ibrahim{left:4%}.phase-cover-dog{left:25%;width:25%!important}.phase-cover-boss{right:4%;width:36%!important;max-height:94%!important}
+.phase-cover span{position:absolute;z-index:2;left:12px;top:12px;background:#123a60df;color:#fff;border-radius:20px;padding:7px 12px;font-size:12px;font-weight:900;letter-spacing:.5px}
+.game-panel:not(.in-encounter) .battle-scene,.game-panel:not(.in-encounter) .battle-hud,.game-panel:not(.in-encounter) .game-status,.game-panel:not(.in-encounter) .game-health,.game-panel:not(.in-encounter) #gameStory,.game-panel:not(.in-encounter) .battle-menu,.game-panel:not(.in-encounter) .next-region,.game-panel:not(.in-encounter) #gameInventorySummary,.game-panel:not(.in-encounter) #evolutionStrip,.game-panel:not(.in-encounter) .tiny{display:none!important}
+.game-panel.exploring .phase-cover,.game-panel.exploring #openExploreMode{display:none!important}
+.game-panel.in-encounter .phase-cover,.game-panel.in-encounter #openExploreMode,.game-panel.in-encounter #ibrahimExploreScreen{display:none!important}
+.next-region{display:none!important}
 .explore-launch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;padding:14px;border:0;border-radius:16px;background:linear-gradient(110deg,#176b43,#0b392e);color:#fff;font-weight:900;font-size:16px;width:100%;cursor:pointer;box-shadow:0 5px 14px #103b2c33}
 .explore-launch small{display:block;font-size:11px;font-weight:600;color:#d5f5df;margin-top:3px}
 .explore-screen{margin:12px 0;padding:12px;border-radius:20px;background:linear-gradient(180deg,#153f31,#0b2a24);color:#fff}
@@ -317,7 +327,7 @@ main{background:transparent!important}
 <div class="game-status"><b id="gameEnemyName">Guardião da Floresta</b><span id="gameEnemyHP">Energia: 30/30</span></div>
 <div class="game-health"><span id="gameHealthBar"></span></div>
 <p class="note" id="gameStory">Um guardião apareceu no caminho! Ajude Ibrahim a vencer usando seus equipamentos e companheiros.</p>
-<div class="game-actions battle-menu"><button id="attackBtn" onclick="attackGuardian()" type="button">⚔️ Corte Relâmpago</button><button class="secondary" id="doubleBtn" onclick="doubleStrike()" type="button">🐶⚔️ Ataque em Dupla <small>1 uso por batalha</small></button><button class="secondary" id="defendBtn" onclick="defendGuardian()" type="button">🛡️ Defesa Guardiã</button><button class="secondary" id="skillBtn" onclick="useHeroSkill()" type="button">✨ Habilidade Especial</button><button class="secondary" id="bagBtn" onclick="openBattleBag()" type="button">🎒 Mochila</button></div><button class="secondary next-region" disabled="" id="exploreBtn" onclick="exploreNext()" type="button">🧭 Próxima região</button><div class="bag-modal" hidden="" id="battleBagModal"><div class="bag-box"><button class="bag-close" onclick="closeBattleBag()" type="button">✕</button><h3>🎒 Mochila do Ibrahim</h3><div class="bag-items" id="battleBagItems"></div></div></div>
+<div class="game-actions battle-menu"><button id="attackBtn" onclick="attackGuardian()" type="button">⚔️ Ataque</button><button class="secondary" id="defendBtn" onclick="defendGuardian()" type="button">🛡️ Defesa</button><button class="secondary" id="doubleBtn" onclick="doubleStrike()" type="button">⚔️ Ataque Duplo <small>1 uso por batalha</small></button><button class="secondary" id="bagBtn" onclick="openBattleBag()" type="button">🎒 Mochila</button></div><button class="secondary next-region" disabled="" id="exploreBtn" onclick="exploreNext()" type="button">🧭 Próxima região</button><div class="bag-modal" hidden="" id="battleBagModal"><div class="bag-box"><button class="bag-close" onclick="closeBattleBag()" type="button">✕</button><h3>🎒 Mochila do Ibrahim</h3><div class="bag-items" id="battleBagItems"></div></div></div>
 <div class="game-inventory" id="gameInventorySummary"></div>
 <div class="evolution-strip" id="evolutionStrip">
 <div class="evolution-heading">👑 Evolução do Ibrahim</div>
@@ -530,8 +540,12 @@ function renderShop(){const groups={quick:'quickRewards',fun:'funRewards',big:'b
 function removeCustomReward(id){const r=data.rewards.find(x=>x.id===id&&x.custom);if(!r)return;if(!confirm('Remover esta recompensa da loja?'))return;data.rewards=data.rewards.filter(x=>x.id!==id);save();render();}
 
 
-const gameStore=[];
-/* Loja temporariamente vazia conforme solicitado. */
+const gameStore=[
+ {id:"medicine",name:"Remedinho",emoji:"🧪",price:18,currency:"coins",type:"consumable",effect:"heal",desc:"Recupera 35 pontos de vida."},
+ {id:"rope",name:"Corda de Captura",emoji:"🪢",price:4,currency:"diamonds",type:"consumable",effect:"capture",desc:"Usada para tentar capturar o chefão."},
+ {id:"injection",name:"Injeção Vital",emoji:"💉",price:7,currency:"diamonds",type:"consumable",effect:"fullheal",desc:"Restaura toda a vida de Ibrahim."},
+ {id:"smoke",name:"Bomba de Fumaça",emoji:"💨",price:25,currency:"coins",type:"consumable",effect:"escape",desc:"Permite fugir do combate."}
+];
 const gameStore_DISABLED=[
  {id:"medicine",name:"Remédio",emoji:"🧪",price:18,currency:"coins",type:"consumable",effect:"heal",desc:"Recupera até 35 pontos de vida."},
  {id:"rope",name:"Corda de Captura",emoji:"🪢",price:4,currency:"diamonds",type:"consumable",effect:"capture",desc:"Permite fazer amizade com um companheiro em encontros especiais."},
@@ -545,6 +559,7 @@ const gameStore_DISABLED=[
 
 function ensureGame(){
  if(!data.game)data.game={owned:[],equipped:{pet:null,weapon:null,armor:null,outfit:null},stage:1,wonStages:[],dailyBattle:{}};
+ data.game.stage=1;
  if(typeof data.game.diamonds!=="number")data.game.diamonds=0; if(!data.game.inventory)data.game.inventory={medicine:2,rope:0,injection:0,smoke:1}; if(!data.game.equipped.mount)data.game.equipped.mount=null;
  if(!Array.isArray(data.game.owned))data.game.owned=[];
  if(!data.game.equipped)data.game.equipped={pet:null,weapon:null,armor:null,outfit:null};
@@ -568,7 +583,7 @@ function gameEnemy(){
   ["Rei das Sombras","👑",120,"shadow","CASTELO DAS SOMBRAS"]
  ];
  const stage=Math.max(1,Number(data.game.stage)||1);
- return enemies[(stage-1)%enemies.length];
+ return enemies[0];
 }
 function gamePower(){
  ensureGame();
@@ -624,9 +639,8 @@ function renderGame(){
  if(monster){monster.dataset.boss=enemy[3];}
  document.getElementById("gameStory").textContent=battle.won?"Vitória! Ibrahim venceu "+enemy[0]+"! O caminho está livre. Avance para a próxima região.":"O guardião também ataca! Use Atacar, Defender ou Habilidade para vencer a batalha.";
  document.getElementById("attackBtn").disabled=!!battle.won||hp<=0;
- document.getElementById("defendBtn").disabled=!!battle.won||hp<=0;const db=document.getElementById("doubleBtn");if(db){db.disabled=!!battle.won||hp<=0||!!battle.doubleUsed;db.innerHTML=battle.doubleUsed?"🐶⚔️ Ataque em Dupla <small>usado</small>":"🐶⚔️ Ataque em Dupla <small>1 uso por batalha</small>";}
- document.getElementById("skillBtn").disabled=!!battle.won||hp<=0||(data.game.skillCooldown||0)>0;
- document.getElementById("skillBtn").textContent=(data.game.skillCooldown||0)>0?"⏳ Habilidade (recarga)":"✨ Habilidade";
+ document.getElementById("defendBtn").disabled=!!battle.won||hp<=0;const db=document.getElementById("doubleBtn");if(db){db.disabled=!!battle.won||hp<=0||!!battle.doubleUsed;db.innerHTML=battle.doubleUsed?"⚔️ Ataque Duplo <small>usado</small>":"⚔️ Ataque Duplo <small>1 uso por batalha</small>";}
+ const skillButton=document.getElementById("skillBtn");if(skillButton){skillButton.disabled=!!battle.won||hp<=0||(data.game.skillCooldown||0)>0;skillButton.textContent=(data.game.skillCooldown||0)>0?"⏳ Habilidade (recarga)":"✨ Habilidade";}
  document.getElementById("exploreBtn").disabled=!battle.won;
  const summary=document.getElementById("gameInventorySummary");
  summary.textContent="Força: "+gamePower()+" ⚔️ · Companheiro: "+(pet?pet.name:"cachorro fiel")+" · Vida: "+hp+"/"+maxHp;
@@ -726,7 +740,7 @@ function useHeroSkill(){
 }
 function exploreNext(){
  ensureGame();const battle=data.game.dailyBattle[todayKey];if(!battle||!battle.won)return;
- closeBattleVictory();data.game.stage++;
+ closeBattleVictory();data.game.stage=1;
  document.getElementById("gameMonster")?.classList.remove("enemy-pose-attack","enemy-pose-hurt","enemy-pose-defeated");
  const enemy=gameEnemy();data.game.dailyBattle[todayKey]={hp:enemy[2],won:false,attacks:0};
  data.game.combat.hp=data.game.combat.maxHp;data.game.combat.guard=0;
@@ -1244,12 +1258,12 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
  function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const k=x+','+y;ctx.fillStyle=(x+y)%2?'#69ad5c':'#75b967';ctx.fillRect(x*tile,y*tile,tile,tile);if(grass.has(k)){ctx.fillStyle='#3e914b';ctx.fillRect(x*tile,y*tile,tile,tile);ctx.fillStyle='#a4d66c';for(let n=0;n<4;n++)ctx.fillRect(x*tile+5+n*6,y*tile+8+(n%2)*7,3,12);}if(trees.has(k)){ctx.fillStyle='#65442e';ctx.fillRect(x*tile+12,y*tile+15,7,14);ctx.font='25px sans-serif';ctx.fillText('🌳',x*tile+1,y*tile+22);}}ctx.font='25px sans-serif';ctx.fillText('🧒',player.x*tile+1,player.y*tile+25);ctx.fillStyle='#fff';ctx.font='bold 12px system-ui';ctx.fillText('FLORESTA ENCANTADA',10,17);}
  function blocked(x,y){return x<0||y<0||x>=cols||y>=rows||trees.has(x+','+y);}
  function move(dir){if(!active||encounterLock)return;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;const nx=player.x+d[0],ny=player.y+d[1];if(blocked(nx,ny))return;player.x=nx;player.y=ny;draw();if(grass.has(nx+','+ny)&&Math.random()<0.22)startWildEncounter();}
- window.openIbrahimExploration=function(){active=true;screen.hidden=false;draw();status.textContent='Explore com cuidado. Há criaturas escondidas na grama!';screen.scrollIntoView({behavior:'smooth',block:'center'});};
- window.closeIbrahimExploration=function(){active=false;screen.hidden=true;};
+ window.openIbrahimExploration=function(){active=true;document.getElementById("ibrahimGame").classList.add("exploring");screen.hidden=false;draw();status.textContent='Explore com cuidado. Há criaturas escondidas na grama!';screen.scrollIntoView({behavior:'smooth',block:'center'});};
+ window.closeIbrahimExploration=function(){active=false;document.getElementById("ibrahimGame").classList.remove("exploring");screen.hidden=true;};
  document.querySelectorAll('[data-move]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();move(b.dataset.move);}));
  window.addEventListener('keydown',e=>{if(!active)return;const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};if(m[e.key]){e.preventDefault();move(m[e.key]);}});
- function startWildEncounter(){if(encounterLock)return;encounterLock=true;ensureGame();const g=data.game;if(!g.exploration)g.exploration={};g.exploration.savedBattle=Object.prototype.hasOwnProperty.call(g.dailyBattle,todayKey)?JSON.parse(JSON.stringify(g.dailyBattle[todayKey])):null;g.exploration.hadBattle=Object.prototype.hasOwnProperty.call(g.dailyBattle,todayKey);g.exploration.inEncounter=true;const enemy=gameEnemy();g.dailyBattle[todayKey]={hp:Math.max(24,Math.round(enemy[2]*0.72)),won:false,attacks:0,exploration:true};save();renderGame();screen.hidden=true;active=false;const story=document.getElementById('gameStory');if(story)story.textContent='🌿 Um '+enemy[0]+' selvagem apareceu na grama alta! Ibrahim, prepare-se!';document.getElementById('ibrahimGame').scrollIntoView({behavior:'smooth',block:'start'});}
- window.returnFromIbrahimEncounter=function(){const g=data.game;if(!g||!g.exploration||!g.exploration.inEncounter)return;if(g.exploration.hadBattle)g.dailyBattle[todayKey]=g.exploration.savedBattle;else delete g.dailyBattle[todayKey];g.exploration.inEncounter=false;g.exploration.savedBattle=null;g.exploration.hadBattle=false;save();renderGame();encounterLock=false;window.openIbrahimExploration();status.textContent='Vitória! A trilha continua. Explore mais um pouco!';};
+ function startWildEncounter(){if(encounterLock)return;encounterLock=true;ensureGame();const g=data.game;if(!g.exploration)g.exploration={};g.exploration.savedBattle=Object.prototype.hasOwnProperty.call(g.dailyBattle,todayKey)?JSON.parse(JSON.stringify(g.dailyBattle[todayKey])):null;g.exploration.hadBattle=Object.prototype.hasOwnProperty.call(g.dailyBattle,todayKey);g.exploration.inEncounter=true;document.getElementById("ibrahimGame").classList.remove("exploring");document.getElementById("ibrahimGame").classList.add("in-encounter");const enemy=gameEnemy();g.dailyBattle[todayKey]={hp:Math.max(24,Math.round(enemy[2]*0.72)),won:false,attacks:0,exploration:true};save();renderGame();screen.hidden=true;active=false;const story=document.getElementById('gameStory');if(story)story.textContent='🌿 Um '+enemy[0]+' selvagem apareceu na grama alta! Ibrahim, prepare-se!';document.getElementById('ibrahimGame').scrollIntoView({behavior:'smooth',block:'start'});}
+ window.returnFromIbrahimEncounter=function(){const g=data.game;if(!g||!g.exploration||!g.exploration.inEncounter)return;if(g.exploration.hadBattle)g.dailyBattle[todayKey]=g.exploration.savedBattle;else delete g.dailyBattle[todayKey];g.exploration.inEncounter=false;g.exploration.savedBattle=null;g.exploration.hadBattle=false;save();renderGame();document.getElementById("ibrahimGame").classList.remove("in-encounter");encounterLock=false;window.openIbrahimExploration();status.textContent='Vitória! A trilha continua. Explore mais um pouco!';};
  draw();
 })();
 </script></body></html>
