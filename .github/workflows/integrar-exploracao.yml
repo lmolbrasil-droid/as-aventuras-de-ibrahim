@@ -1,0 +1,24 @@
+name: Integrar exploração 2D
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/integrate-exploration.cjs"
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Integrar exploração no aplicativo principal
+        run: |
+          node scripts/integrate-exploration.cjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Integra exploração 2D ao jogo principal"
+          git push
