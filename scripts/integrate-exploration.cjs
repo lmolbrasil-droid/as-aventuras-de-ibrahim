@@ -4,7 +4,7 @@ let s = fs.readFileSync(path, 'utf8');
 const anchor = '<div class="game-title"><div><span class="game-kicker">MUNDO DE IBRAHIM</span><h2>🗺️ Aventura do dia</h2></div><span class="game-badge">FASE <b id="gameStage">1</b></span></div>';
 if (!s.includes(anchor)) throw new Error('Ponto de inserção da aventura não encontrado.');
 if (s.includes('id="ibrahimExploreCanvas"')) throw new Error('A exploração já parece estar integrada.');
-const markup = String.raw\`
+const markup = String.raw`
 <button class="explore-launch" id="openExploreMode" type="button" onclick="openIbrahimExploration()"><span>🌿 EXPLORAR O MUNDO<small>Ande pela floresta e encontre criaturas!</small></span><span>➜</span></button>
 <div class="explore-screen" id="ibrahimExploreScreen" hidden>
  <div class="explore-top"><b>🌳 Floresta Encantada</b><button class="explore-exit" type="button" onclick="closeIbrahimExploration()">← Voltar</button></div>
@@ -27,9 +27,9 @@ const markup = String.raw\`
 .explore-pad .empty{visibility:hidden}
 .explore-status{text-align:center;color:#ffe58b;font-weight:800;min-height:22px;font-size:13px}
 .explore-exit{background:#dcefe4!important;color:#16412b!important}
-</style>\`;
+</style>`;
 s = s.replace(anchor, anchor + markup);
-const integration = String.raw\`
+const integration = String.raw`
 <script id="ibrahim-exploration-integration">
 (function(){
  'use strict';
@@ -49,7 +49,7 @@ const integration = String.raw\`
  window.returnFromIbrahimEncounter=function(){const g=data.game;if(!g||!g.exploration||!g.exploration.inEncounter)return;if(g.exploration.hadBattle)g.dailyBattle[todayKey]=g.exploration.savedBattle;else delete g.dailyBattle[todayKey];g.exploration.inEncounter=false;g.exploration.savedBattle=null;g.exploration.hadBattle=false;save();renderGame();encounterLock=false;window.openIbrahimExploration();status.textContent='Vitória! A trilha continua. Explore mais um pouco!';};
  draw();
 })();
-</script>\`;
+</script>`;
 if (!s.includes('</body></html>')) throw new Error('Final do HTML não encontrado.');
 s = s.replace('</body></html>', integration + '</body></html>');
 const old = 'onclick="closeBattleVictory();exploreNext()">CONTINUAR A AVENTURA ➜';
