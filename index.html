@@ -959,7 +959,7 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
       inv.rope--;b.captureAvailable=false;
       const companion={id:'companion-'+Date.now(),name:'Raposa Guardiã',emoji:'🦊'};
       data.game.capturedCompanions.push(companion);data.game.equipped.pet=companion.id;
-      closeBattleBag();safeSave();renderGame();story('🪢 Você conquistou a amizade da Raposa Guardiã! Ela acompanhará Ibrahim.');busy=true;setTimeout(enemyTurn,550);return;
+      closeBattleBag();safeSave();renderGame();story('🪢 Você conquistou a amizade da Raposa Guardiã! Ela acompanhará Ibrahim.');setTimeout(()=>window.enemyTurn(),550);return;
     }
     if(id==='medicine'){
       const before=c.hp;c.hp=Math.min(c.maxHp,c.hp+35);
