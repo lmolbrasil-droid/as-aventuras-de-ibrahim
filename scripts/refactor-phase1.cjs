@@ -138,3 +138,35 @@ const inline = [...app.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(x=
 for (let i=0;i<inline.length;i++) { try { new Function(inline[i]); } catch(e) { throw new Error("JavaScript inválido no script inline "+i+": "+e.message); } }
 fs.writeFileSync(file, app);
 console.log("v1.38 aplicada; scripts inline validados: "+inline.length);
+
+
+/* v1.39: loja enxuta, arte RPG e capa de confronto da Fase 1. */
+let finalApp=fs.readFileSync(file,"utf8");
+function finalPatch(oldText,newText,label){
+ const count=finalApp.split(oldText).length-1;
+ if(count===0&&finalApp.includes(newText))return;
+ if(count!==1)throw new Error(label+": esperado 1 trecho, encontrado "+count);
+ finalApp=finalApp.replace(oldText,newText);
+}
+const catalogStart=finalApp.indexOf("const gameStore=[");
+const catalogEnd=finalApp.indexOf("\\n];",catalogStart);
+if(catalogStart<0||catalogEnd<0)throw new Error("Catálogo RPG não localizado.");
+finalApp=finalApp.slice(0,catalogStart)+`const gameStore=[
+ {id:"medicine",name:"Remédio",emoji:"",art:"assets/item-medicine.svg",price:18,currency:"coins",type:"consumable",effect:"heal",desc:"Recupera até 35 pontos de vida."},
+ {id:"injection",name:"Cura",emoji:"",art:"assets/item-cure.svg",price:7,currency:"diamonds",type:"consumable",effect:"fullheal",desc:"Restaura toda a vida de Ibrahim."},
+ {id:"rope",name:"Rede de captura",emoji:"",art:"assets/item-net.svg",price:4,currency:"diamonds",type:"consumable",effect:"capture",desc:"Permite capturar um companheiro em encontros especiais."},
+ {id:"smoke",name:"Bomba de fumaça",emoji:"",art:"assets/item-smoke.svg",price:25,currency:"coins",type:"consumable",effect:"escape",desc:"Permite fugir da batalha sem perder a aventura."}
+]`+finalApp.slice(catalogEnd+3);
+finalPatch('const roots={pet:"quickRewards",weapon:"consumableRewards",armor:"consumableRewards",consumable:"consumableRewards"};','const roots={pet:"consumableRewards",weapon:"consumableRewards",armor:"consumableRewards",consumable:"consumableRewards"};',"categorias da loja");
+finalPatch('const art=document.createElement("div");art.className="game-item-art";art.textContent=item.emoji;card.append(art);','const art=document.createElement("div");art.className="game-item-art";const artImg=document.createElement("img");artImg.src=item.art;artImg.alt=item.name;art.append(artImg);card.append(art);',"imagem dos itens");
+finalPatch('const list=[{id:"medicine",name:"Remédio",emoji:"🧪",desc:"Recupera 35 de vida."},{id:"injection",name:"Injeção Vital",emoji:"💉",desc:"Recupera toda a vida."},{id:"rope",name:"Corda",emoji:"🪢",desc:"Captura personagem amigável."},{id:"smoke",name:"Fumaça",emoji:"💨",desc:"Foge da batalha."}];','const list=[{id:"medicine",name:"Remédio",emoji:"🧪",desc:"Recupera 35 de vida."},{id:"injection",name:"Cura",emoji:"✨",desc:"Recupera toda a vida."},{id:"rope",name:"Rede de captura",emoji:"🕸️",desc:"Captura personagem amigável."},{id:"smoke",name:"Bomba de fumaça",emoji:"💨",desc:"Foge da batalha."}];',"nomes da mochila");
+finalPatch('<div class="phase-cover" aria-label="Ibrahim, seu cachorro e o Guardião da Floresta na Floresta Encantada"><img class="phase-cover-ibrahim" src="assets/ibrahim_idle.png" alt="Ibrahim"><img class="phase-cover-dog" src="assets/companion_dog.png" alt="Cachorro companheiro"><img class="phase-cover-boss" src="assets/enemy_guardian.webp" alt="Guardião da Floresta"><span>FLORESTA ENCANTADA · FASE 1</span></div>','<div class="phase-cover phase-cover-faceoff" data-phase-art="faceoff" aria-label="Ibrahim e seu cachorro enfrentam o Guardião da Floresta"><img src="assets/phase1-faceoff.svg" alt="Ibrahim e seu cachorro frente a frente com o chefão da Floresta Encantada"></div>',"capa da fase");
+finalPatch('<div class="battle-wallet battle-wallet-top"><div>🪙 MOEDAS<strong id="battleCoins">0</strong><small>Use na loja</small></div><div>⭐ XP DAS ATIVIDADES<strong id="battleXP">0</strong><small>Conquistado nas missões</small></div><div>💎 DIAMANTES<strong id="battleDiamonds">0</strong><small>Moeda do RPG</small></div></div>','',"painel azul de moedas");
+finalPatch('.phase-cover{position:relative;height:210px;margin:12px 0 4px;border:4px solid #fff;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#8bd7ff,#6aa94d);box-shadow:0 5px 16px #143c2b30}\\n.phase-cover:before{content:"";position:absolute;inset:0;background:url("assets/forest_bg.jpg") center/cover;filter:saturate(1.08)}\\n.phase-cover img{position:absolute;z-index:1;object-fit:contain;bottom:4px;max-height:84%;width:30%;height:82%}\\n.phase-cover-ibrahim{left:4%}.phase-cover-dog{left:25%;width:25%!important}.phase-cover-boss{right:4%;width:36%!important;max-height:94%!important}\\n.phase-cover span{position:absolute;z-index:2;left:12px;top:12px;background:#123a60df;color:#fff;border-radius:20px;padding:7px 12px;font-size:12px;font-weight:900;letter-spacing:.5px}',
+'.phase-cover{position:relative;height:230px;margin:12px 0 4px;border:4px solid #fff;border-radius:18px;overflow:hidden;background:#183e31;box-shadow:0 5px 16px #143c2b30}\\n.phase-cover-faceoff img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}',"estilo da capa");
+finalPatch('.game-item-art{height:92px;border-radius:12px;display:grid;place-items:center;font-size:56px;background:linear-gradient(145deg,#d8efff,#fff);border:1px solid #c7e4f5}',
+'.game-item-art{height:112px;border-radius:12px;display:grid;place-items:center;background:radial-gradient(circle at 50% 25%,#385a6a,#101f31 78%);border:2px solid #b89a5b;overflow:hidden;box-shadow:inset 0 0 14px #050e1a}.game-item-art img{width:100%;height:100%;object-fit:contain}.game-item{background:linear-gradient(145deg,#fdf8e9,#e9e0ca);border:1px solid #b89a5b}',"estilo dos itens");
+const inlineScripts=[...finalApp.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)].map(x=>x[1]).filter(x=>x.trim());
+for(let i=0;i<inlineScripts.length;i++){try{new Function(inlineScripts[i]);}catch(e){throw new Error("JavaScript inválido no script inline "+i+": "+e.message);}}
+fs.writeFileSync(file,finalApp);
+console.log("v1.39 aplicada; catálogo, painel azul e capa atualizados.");
