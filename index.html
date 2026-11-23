@@ -541,10 +541,14 @@ function removeCustomReward(id){const r=data.rewards.find(x=>x.id===id&&x.custom
 
 
 const gameStore=[
- {id:"medicine",name:"Remedinho",emoji:"🧪",price:18,currency:"coins",type:"consumable",effect:"heal",desc:"Recupera 35 pontos de vida."},
- {id:"rope",name:"Corda de Captura",emoji:"🪢",price:4,currency:"diamonds",type:"consumable",effect:"capture",desc:"Usada para tentar capturar o chefão."},
+ {id:"medicine",name:"Remédio",emoji:"🧪",price:18,currency:"coins",type:"consumable",effect:"heal",desc:"Recupera até 35 pontos de vida."},
+ {id:"rope",name:"Corda de Captura",emoji:"🪢",price:4,currency:"diamonds",type:"consumable",effect:"capture",desc:"Permite fazer amizade com um companheiro em encontros especiais."},
  {id:"injection",name:"Injeção Vital",emoji:"💉",price:7,currency:"diamonds",type:"consumable",effect:"fullheal",desc:"Restaura toda a vida de Ibrahim."},
- {id:"smoke",name:"Bomba de Fumaça",emoji:"💨",price:25,currency:"coins",type:"consumable",effect:"escape",desc:"Permite fugir do combate."}
+ {id:"smoke",name:"Bomba de Fumaça",emoji:"💨",price:25,currency:"coins",type:"consumable",effect:"escape",desc:"Permite fugir da batalha sem perder a aventura."},
+ {id:"faithfulDog",name:"Cachorro fiel",emoji:"🐶",price:90,currency:"coins",type:"pet",power:3,desc:"Um companheiro leal que acompanha Ibrahim nas aventuras."},
+ {id:"littleDragon",name:"Dragãozinho",emoji:"🐉",price:450,currency:"coins",type:"pet",power:8,desc:"Um pequeno dragão que fortalece Ibrahim nas batalhas."},
+ {id:"ironSword",name:"Espada de ferro",emoji:"⚔️",price:180,currency:"coins",type:"weapon",power:12,desc:"Uma espada resistente que aumenta o dano dos ataques."},
+ {id:"royalArmor",name:"Armadura real",emoji:"🛡️",price:320,currency:"coins",type:"armor",power:12,desc:"Uma armadura especial que fortalece a defesa de Ibrahim."}
 ];
 const gameStore_DISABLED=[
  {id:"medicine",name:"Remédio",emoji:"🧪",price:18,currency:"coins",type:"consumable",effect:"heal",desc:"Recupera até 35 pontos de vida."},
@@ -583,11 +587,13 @@ function gameEnemy(){
   ["Rei das Sombras","👑",120,"shadow","CASTELO DAS SOMBRAS"]
  ];
  const stage=Math.max(1,Number(data.game.stage)||1);
- return enemies[0];
+ const exploration=data.game.exploration;
+ return exploration&&exploration.inEncounter&&exploration.activeEnemy?exploration.activeEnemy:enemies[0];
 }
 function gamePower(){
  ensureGame();
- return 12+["weapon","pet","armor"].reduce((v,k)=>{let it=gameStore.find(x=>x.id===data.game.equipped[k]);return v+(it?it.power:0)},0);
+ const captured=(data.game.capturedCompanions||[]).find(x=>x.id===data.game.equipped.pet);
+ return 12+["weapon","pet","armor"].reduce((v,k)=>{let it=gameStore.find(x=>x.id===data.game.equipped[k]);return v+(it?it.power:0)},0)+(captured?3:0);
 }
 function setHeroPose(pose,duration=850){
  const img=document.getElementById("heroSprite");if(!img)return;
@@ -1179,6 +1185,22 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
    if(b.hp<=0){finish(enemy,b);return;}
    setTimeout(()=>{turnBusy=false;enemyTurn();},650);
  }
+ const renderBeforeCapture=window.renderGame;
+ window.renderGame=function(){
+   renderBeforeCapture();
+   const petStage=$('gameCompanion'),petId=data.game&&data.game.equipped&&data.game.equipped.pet;
+   const captured=(data.game&&data.game.capturedCompanions||[]).find(x=>x.id===petId);
+   if(petStage&&captured){petStage.innerHTML='<span aria-label="'+String(captured.name||'Companheiro capturado').replace(/["<>]/g,'')+'" style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-size:clamp(58px,16vw,112px);filter:drop-shadow(0 5px 4px #153b3b66)">'+(captured.emoji||'🦊')+'</span>';}
+ };
+ const previousUseBagItem=window.useBagItem;
+ window.useBagItem=function(id){
+   const wild=!!(data.game&&data.game.exploration&&data.game.exploration.inEncounter);
+   previousUseBagItem(id);
+   if(id==='smoke'&&wild&&data.game.exploration&&data.game.exploration.inEncounter){
+     window.returnFromIbrahimEncounter();
+     story('💨 Ibrahim usou a Bomba de Fumaça, escapou do encontro e voltou à trilha.');
+   }
+ };
  window.ensureGame=ensure;
  window.enemyTurn=enemyTurn;
  window.attackGuardian=()=>playerAction('attack');
@@ -1193,6 +1215,7 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
    safeSave();refresh();setTimeout(()=>{turnBusy=false;enemyTurn();},350);
  };
  window.exploreNext=()=>{
+   if(data.game&&data.game.exploration&&data.game.exploration.inEncounter){window.returnFromIbrahimEncounter();return;}
    const b=currentBattle();if(advancing||(!b.won&&!b.escaped))return;
    advancing=true;window.closeBattleBag();window.closeBattleVictory();turnBusy=false;
    data.game.stage=Math.max(1,Number(data.game.stage)||1)+1;
@@ -1257,13 +1280,62 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
  const trees=new Set();[[0,0],[1,0],[4,0],[7,0],[11,0],[15,0],[17,0],[0,3],[4,3],[6,2],[16,3],[17,5],[1,10],[4,11],[7,10],[16,10],[17,11],[10,2],[12,3]].forEach(p=>trees.add(p[0]+','+p[1]));
  function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const k=x+','+y;ctx.fillStyle=(x+y)%2?'#69ad5c':'#75b967';ctx.fillRect(x*tile,y*tile,tile,tile);if(grass.has(k)){ctx.fillStyle='#3e914b';ctx.fillRect(x*tile,y*tile,tile,tile);ctx.fillStyle='#a4d66c';for(let n=0;n<4;n++)ctx.fillRect(x*tile+5+n*6,y*tile+8+(n%2)*7,3,12);}if(trees.has(k)){ctx.fillStyle='#65442e';ctx.fillRect(x*tile+12,y*tile+15,7,14);ctx.font='25px sans-serif';ctx.fillText('🌳',x*tile+1,y*tile+22);}}ctx.font='25px sans-serif';ctx.fillText('🧒',player.x*tile+1,player.y*tile+25);ctx.fillStyle='#fff';ctx.font='bold 12px system-ui';ctx.fillText('FLORESTA ENCANTADA',10,17);}
  function blocked(x,y){return x<0||y<0||x>=cols||y>=rows||trees.has(x+','+y);}
- function move(dir){if(!active||encounterLock)return;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;const nx=player.x+d[0],ny=player.y+d[1];if(blocked(nx,ny))return;player.x=nx;player.y=ny;draw();if(grass.has(nx+','+ny)&&Math.random()<0.22)startWildEncounter();}
- window.openIbrahimExploration=function(){active=true;document.getElementById("ibrahimGame").classList.add("exploring");screen.hidden=false;draw();status.textContent='Explore com cuidado. Há criaturas escondidas na grama!';screen.scrollIntoView({behavior:'smooth',block:'center'});};
+ function move(dir){if(!active||encounterLock)return;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;const nx=player.x+d[0],ny=player.y+d[1];if(blocked(nx,ny))return;player.x=nx;player.y=ny;ensureGame();if(!data.game.exploration)data.game.exploration={};data.game.exploration.player={x:player.x,y:player.y};save();draw();if(grass.has(nx+','+ny)&&Math.random()<0.22)startWildEncounter();}
+ window.openIbrahimExploration=function(){ensureGame();const g=data.game.exploration;if(g&&g.player){player.x=Math.max(0,Math.min(cols-1,Number(g.player.x)||0));player.y=Math.max(0,Math.min(rows-1,Number(g.player.y)||0));}active=true;document.getElementById("ibrahimGame").classList.remove("in-encounter");document.getElementById("ibrahimGame").classList.add("exploring");screen.hidden=false;draw();status.textContent='Explore com cuidado. Há criaturas escondidas na grama!';screen.scrollIntoView({behavior:'smooth',block:'center'});};
  window.closeIbrahimExploration=function(){active=false;document.getElementById("ibrahimGame").classList.remove("exploring");screen.hidden=true;};
  document.querySelectorAll('[data-move]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();move(b.dataset.move);}));
  window.addEventListener('keydown',e=>{if(!active)return;const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};if(m[e.key]){e.preventDefault();move(m[e.key]);}});
- function startWildEncounter(){if(encounterLock)return;encounterLock=true;ensureGame();const g=data.game;if(!g.exploration)g.exploration={};g.exploration.savedBattle=Object.prototype.hasOwnProperty.call(g.dailyBattle,todayKey)?JSON.parse(JSON.stringify(g.dailyBattle[todayKey])):null;g.exploration.hadBattle=Object.prototype.hasOwnProperty.call(g.dailyBattle,todayKey);g.exploration.inEncounter=true;document.getElementById("ibrahimGame").classList.remove("exploring");document.getElementById("ibrahimGame").classList.add("in-encounter");const enemy=gameEnemy();g.dailyBattle[todayKey]={hp:Math.max(24,Math.round(enemy[2]*0.72)),won:false,attacks:0,exploration:true};save();renderGame();screen.hidden=true;active=false;const story=document.getElementById('gameStory');if(story)story.textContent='🌿 Um '+enemy[0]+' selvagem apareceu na grama alta! Ibrahim, prepare-se!';document.getElementById('ibrahimGame').scrollIntoView({behavior:'smooth',block:'start'});}
- window.returnFromIbrahimEncounter=function(){const g=data.game;if(!g||!g.exploration||!g.exploration.inEncounter)return;if(g.exploration.hadBattle)g.dailyBattle[todayKey]=g.exploration.savedBattle;else delete g.dailyBattle[todayKey];g.exploration.inEncounter=false;g.exploration.savedBattle=null;g.exploration.hadBattle=false;save();renderGame();document.getElementById("ibrahimGame").classList.remove("in-encounter");encounterLock=false;window.openIbrahimExploration();status.textContent='Vitória! A trilha continua. Explore mais um pouco!';};
+ function startWildEncounter(){
+  if(encounterLock)return;
+  encounterLock=true;ensureGame();
+  const g=data.game;if(!g.exploration)g.exploration={};
+  g.exploration.savedBattle=Object.prototype.hasOwnProperty.call(g.dailyBattle,todayKey)?JSON.parse(JSON.stringify(g.dailyBattle[todayKey])):null;
+  g.exploration.hadBattle=Object.prototype.hasOwnProperty.call(g.dailyBattle,todayKey);
+  const wildEnemies=[
+   ["Troll da Mata","👹",32,"troll","FLORESTA ENCANTADA"],
+   ["Dragãozinho Selvagem","🐉",38,"dragon","FLORESTA ENCANTADA"],
+   ["Sombra da Floresta","🌑",44,"shadow","FLORESTA ENCANTADA"]
+  ];
+  const enemy=wildEnemies[Math.floor(Math.random()*wildEnemies.length)];
+  g.exploration.activeEnemy=enemy;g.exploration.inEncounter=true;
+  g.exploration.player={x:player.x,y:player.y};
+  const stage=Math.max(1,Number(g.stage)||1);
+  g.dailyBattle[todayKey]={stage,hp:enemy[2],won:false,escaped:false,attacks:0,doubleUsed:false,rewardClaimed:false,chestOpened:false,captureAvailable:true,guardActive:false,exploration:true};
+  const root=document.getElementById("ibrahimGame");
+  root.classList.remove("exploring");root.classList.add("in-encounter");
+  save();renderGame();screen.hidden=true;active=false;
+  const story=document.getElementById('gameStory');
+  if(story)story.textContent='🌿 Um '+enemy[0]+' selvagem apareceu na grama alta! Ibrahim, prepare-se!';
+  root.scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ window.returnFromIbrahimEncounter=function(){
+  const g=data.game;if(!g||!g.exploration||!g.exploration.inEncounter)return;
+  if(g.exploration.hadBattle)g.dailyBattle[todayKey]=g.exploration.savedBattle;
+  else delete g.dailyBattle[todayKey];
+  g.exploration.inEncounter=false;g.exploration.activeEnemy=null;
+  g.exploration.savedBattle=null;g.exploration.hadBattle=false;
+  g.exploration.player={x:player.x,y:player.y};
+  save();renderGame();
+  const root=document.getElementById("ibrahimGame");
+  root.classList.remove("in-encounter");encounterLock=false;
+  window.openIbrahimExploration();
+  status.textContent='A trilha continua! Explore mais um pouco.';
+ };
+ function restoreExplorationState(){
+  ensureGame();
+  const g=data.game.exploration,root=document.getElementById("ibrahimGame");
+  if(g&&g.player){player.x=Math.max(0,Math.min(cols-1,Number(g.player.x)||0));player.y=Math.max(0,Math.min(rows-1,Number(g.player.y)||0));}
+  if(g&&g.inEncounter){
+   active=false;encounterLock=true;screen.hidden=true;
+   root.classList.remove("exploring");root.classList.add("in-encounter");
+  }else{
+   active=false;encounterLock=false;screen.hidden=true;
+   root.classList.remove("in-encounter","exploring");
+  }
+  draw();try{renderGame();}catch(e){}
+ }
+ window.addEventListener("pageshow",restoreExplorationState);
+ restoreExplorationState();
  draw();
 })();
 </script></body></html>
