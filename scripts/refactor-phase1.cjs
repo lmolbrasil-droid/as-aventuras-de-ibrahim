@@ -142,12 +142,12 @@ console.log("v1.38 aplicada; scripts inline validados: "+inline.length);
 
 /* v1.39: loja enxuta, arte RPG e capa de confronto da Fase 1. */
 let finalApp=fs.readFileSync(file,"utf8");
-const catalog=String.raw\`const gameStore=[
+const catalog=String.raw`const gameStore=[
  {id:"medicine",name:"Remédio",emoji:"",art:"assets/item-medicine.svg",price:18,currency:"coins",type:"consumable",effect:"heal",desc:"Recupera até 35 pontos de vida."},
  {id:"injection",name:"Cura",emoji:"",art:"assets/item-cure.svg",price:7,currency:"diamonds",type:"consumable",effect:"fullheal",desc:"Restaura toda a vida de Ibrahim."},
  {id:"rope",name:"Rede de captura",emoji:"",art:"assets/item-net.svg",price:4,currency:"diamonds",type:"consumable",effect:"capture",desc:"Permite capturar um companheiro em encontros especiais."},
  {id:"smoke",name:"Bomba de fumaça",emoji:"",art:"assets/item-smoke.svg",price:25,currency:"coins",type:"consumable",effect:"escape",desc:"Permite fugir da batalha sem perder a aventura."}
-];\`;
+];`;
 const catalogMatch=finalApp.match(/const gameStore=\[[\s\S]*?\n\];/);
 if(!catalogMatch)throw new Error("Catálogo RPG não localizado.");
 finalApp=finalApp.replace(catalogMatch[0],catalog);
