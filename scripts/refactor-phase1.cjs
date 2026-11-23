@@ -19,6 +19,7 @@ function patch(oldText,newText,label){
  if(count!==1)throw new Error(label+": esperado 1 trecho, encontrado "+count);
  s=s.replace(oldText,newText);
 }
+patch('<div class="subhead">🐾 Companheiros</div><div class="shop-grid" id="quickRewards"></div>','',"remove seção de companheiros");
 patch('const roots={pet:"quickRewards",weapon:"consumableRewards",armor:"consumableRewards",consumable:"consumableRewards"};','const roots={pet:"consumableRewards",weapon:"consumableRewards",armor:"consumableRewards",consumable:"consumableRewards"};',"categorias da loja");
 patch('const art=document.createElement("div");art.className="game-item-art";art.textContent=item.emoji;card.append(art);','const art=document.createElement("div");art.className="game-item-art";const artImg=document.createElement("img");artImg.src=item.art;artImg.alt=item.name;art.append(artImg);card.append(art);',"imagem dos itens");
 patch('const list=[{id:"medicine",name:"Remédio",emoji:"🧪",desc:"Recupera 35 de vida."},{id:"injection",name:"Injeção Vital",emoji:"💉",desc:"Recupera toda a vida."},{id:"rope",name:"Corda",emoji:"🪢",desc:"Captura personagem amigável."},{id:"smoke",name:"Fumaça",emoji:"💨",desc:"Foge da batalha."}];','const list=[{id:"medicine",name:"Remédio",emoji:"🧪",desc:"Recupera 35 de vida."},{id:"injection",name:"Cura",emoji:"✨",desc:"Recupera toda a vida."},{id:"rope",name:"Rede de captura",emoji:"🕸️",desc:"Captura personagem amigável."},{id:"smoke",name:"Bomba de fumaça",emoji:"💨",desc:"Foge da batalha."}];',"nomes da mochila");
