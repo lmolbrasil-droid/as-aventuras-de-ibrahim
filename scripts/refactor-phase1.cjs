@@ -7,7 +7,7 @@ const catalog=[
 ' {id:"injection",name:"Cura",emoji:"",art:"assets/item-cure.svg",price:7,currency:"diamonds",type:"consumable",effect:"fullheal",desc:"Restaura toda a vida de Ibrahim."},',
 ' {id:"rope",name:"Rede de captura",emoji:"",art:"assets/item-net.svg",price:4,currency:"diamonds",type:"consumable",effect:"capture",desc:"Permite capturar um companheiro em encontros especiais."},',
 ' {id:"smoke",name:"Bomba de fumaça",emoji:"",art:"assets/item-smoke.svg",price:25,currency:"coins",type:"consumable",effect:"escape",desc:"Permite fugir da batalha sem perder a aventura."}',
-']; 
+];
 const start=s.indexOf("const gameStore=[");
 const end=s.indexOf("\n];",start);
 if(start<0||end<0)throw new Error("Catálogo RPG não localizado.");
