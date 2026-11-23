@@ -14,7 +14,7 @@ const end=s.indexOf("\n];",start);
 if(start<0||end<0)throw new Error("Catálogo RPG não localizado.");
 s=s.slice(0,start)+catalog.join("\n")+s.slice(end+3);
 function patch(oldText,newText,label){
- if(s.includes(newText))return;
+ if(newText&&s.includes(newText))return;
  const count=s.split(oldText).length-1;
  if(count!==1)throw new Error(label+": esperado 1 trecho, encontrado "+count);
  s=s.replace(oldText,newText);
