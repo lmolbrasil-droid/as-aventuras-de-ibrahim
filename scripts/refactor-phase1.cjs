@@ -69,3 +69,59 @@ replaceOnce(
 );
 fs.writeFileSync(file,s);
 console.log("Refatoração da Fase 1 preparada.");
+
+
+// v1.38: stabilize exploration encounters, persistence, capture and the complete shop.
+let app = fs.readFileSync(file, "utf8");
+function patchOne(oldText, newText, label) {
+  const count = app.split(oldText).length - 1;
+  if (count !== 1) throw new Error(label + ": esperado 1 trecho, encontrado " + count);
+  app = app.replace(oldText, newText);
+}
+function patchLast(oldText, newText, label) {
+  const at = app.lastIndexOf(oldText);
+  if (at < 0) throw new Error(label + ": trecho não encontrado");
+  app = app.slice(0, at) + newText + app.slice(at + oldText.length);
+}
+const disabledStore = app.match(/const gameStore_DISABLED=\[([\s\S]*?)\];/);
+if (!disabledStore) throw new Error("Catálogo antigo de equipamentos não encontrado.");
+app = app.replace(/const gameStore=\[[\s\S]*?\];/, "const gameStore=[" + disabledStore[1] + "];");
+patchOne(
+  " const stage=Math.max(1,Number(data.game.stage)||1);\n return enemies[0];",
+  " const stage=Math.max(1,Number(data.game.stage)||1);\n const exploration=data.game.exploration;\n return exploration&&exploration.inEncounter&&exploration.activeEnemy?exploration.activeEnemy:enemies[0];",
+  "seleção de inimigo selvagem"
+);
+patchOne(
+  " return 12+[\"weapon\",\"pet\",\"armor\"].reduce((v,k)=>{let it=gameStore.find(x=>x.id===data.game.equipped[k]);return v+(it?it.power:0)},0);",
+  " const captured=(data.game.capturedCompanions||[]).find(x=>x.id===data.game.equipped.pet);\n return 12+[\"weapon\",\"pet\",\"armor\"].reduce((v,k)=>{let it=gameStore.find(x=>x.id===data.game.equipped[k]);return v+(it?it.power:0)},0)+(captured?3:0);",
+  "força do companheiro capturado"
+);
+patchLast(
+  " window.ensureGame=ensure;\n window.enemyTurn=enemyTurn;",
+  " const renderBeforeCapture=window.renderGame;\n window.renderGame=function(){\n   renderBeforeCapture();\n   const petStage=$('gameCompanion'),petId=data.game&&data.game.equipped&&data.game.equipped.pet;\n   const captured=(data.game&&data.game.capturedCompanions||[]).find(x=>x.id===petId);\n   if(petStage&&captured){petStage.innerHTML='<span aria-label=\"'+String(captured.name||'Companheiro capturado').replace(/[\"<>]/g,'')+'\" style=\"display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-size:clamp(58px,16vw,112px);filter:drop-shadow(0 5px 4px #153b3b66)\">'+(captured.emoji||'🦊')+'</span>';}\n };\n const previousUseBagItem=window.useBagItem;\n window.useBagItem=function(id){\n   const wild=!!(data.game&&data.game.exploration&&data.game.exploration.inEncounter);\n   previousUseBagItem(id);\n   if(id==='smoke'&&wild&&data.game.exploration&&data.game.exploration.inEncounter){\n     window.returnFromIbrahimEncounter();\n     story('💨 Ibrahim usou a Bomba de Fumaça, escapou do encontro e voltou à trilha.');\n   }\n };\n window.ensureGame=ensure;\n window.enemyTurn=enemyTurn;",
+  "renderização de captura e bomba de fumaça"
+);
+patchLast(
+  " window.exploreNext=()=>{\n   const b=currentBattle();if(advancing||(!b.won&&!b.escaped))return;",
+  " window.exploreNext=()=>{\n   if(data.game&&data.game.exploration&&data.game.exploration.inEncounter){window.returnFromIbrahimEncounter();return;}\n   const b=currentBattle();if(advancing||(!b.won&&!b.escaped))return;",
+  "retorno ao mapa após encontro"
+);
+const explorationAt = app.indexOf('<script id="ibrahim-exploration-integration">');
+const controllerStart = app.indexOf(" function startWildEncounter(){", explorationAt);
+const controllerEnd = app.indexOf("\n draw();", controllerStart);
+if (explorationAt < 0 || controllerStart < 0 || controllerEnd < 0) throw new Error("Controlador da exploração não localizado.");
+app = app.slice(0, controllerStart) + " function startWildEncounter(){\n  if(encounterLock)return;\n  encounterLock=true;ensureGame();\n  const g=data.game;if(!g.exploration)g.exploration={};\n  g.exploration.savedBattle=Object.prototype.hasOwnProperty.call(g.dailyBattle,todayKey)?JSON.parse(JSON.stringify(g.dailyBattle[todayKey])):null;\n  g.exploration.hadBattle=Object.prototype.hasOwnProperty.call(g.dailyBattle,todayKey);\n  const wildEnemies=[\n   [\"Troll da Mata\",\"👹\",32,\"troll\",\"FLORESTA ENCANTADA\"],\n   [\"Dragãozinho Selvagem\",\"🐉\",38,\"dragon\",\"FLORESTA ENCANTADA\"],\n   [\"Sombra da Floresta\",\"🌑\",44,\"shadow\",\"FLORESTA ENCANTADA\"]\n  ];\n  const enemy=wildEnemies[Math.floor(Math.random()*wildEnemies.length)];\n  g.exploration.activeEnemy=enemy;g.exploration.inEncounter=true;\n  g.exploration.player={x:player.x,y:player.y};\n  const stage=Math.max(1,Number(g.stage)||1);\n  g.dailyBattle[todayKey]={stage,hp:enemy[2],won:false,escaped:false,attacks:0,doubleUsed:false,rewardClaimed:false,chestOpened:false,captureAvailable:true,guardActive:false,exploration:true};\n  const root=document.getElementById(\"ibrahimGame\");\n  root.classList.remove(\"exploring\");root.classList.add(\"in-encounter\");\n  save();renderGame();screen.hidden=true;active=false;\n  const story=document.getElementById('gameStory');\n  if(story)story.textContent='🌿 Um '+enemy[0]+' selvagem apareceu na grama alta! Ibrahim, prepare-se!';\n  root.scrollIntoView({behavior:'smooth',block:'start'});\n }\n window.returnFromIbrahimEncounter=function(){\n  const g=data.game;if(!g||!g.exploration||!g.exploration.inEncounter)return;\n  if(g.exploration.hadBattle)g.dailyBattle[todayKey]=g.exploration.savedBattle;\n  else delete g.dailyBattle[todayKey];\n  g.exploration.inEncounter=false;g.exploration.activeEnemy=null;\n  g.exploration.savedBattle=null;g.exploration.hadBattle=false;\n  g.exploration.player={x:player.x,y:player.y};\n  save();renderGame();\n  const root=document.getElementById(\"ibrahimGame\");\n  root.classList.remove(\"in-encounter\");encounterLock=false;\n  window.openIbrahimExploration();\n  status.textContent='A trilha continua! Explore mais um pouco.';\n };\n function restoreExplorationState(){\n  ensureGame();\n  const g=data.game.exploration,root=document.getElementById(\"ibrahimGame\");\n  if(g&&g.player){player.x=Math.max(0,Math.min(cols-1,Number(g.player.x)||0));player.y=Math.max(0,Math.min(rows-1,Number(g.player.y)||0));}\n  if(g&&g.inEncounter){\n   active=false;encounterLock=true;screen.hidden=true;\n   root.classList.remove(\"exploring\");root.classList.add(\"in-encounter\");\n  }else{\n   active=false;encounterLock=false;screen.hidden=true;\n   root.classList.remove(\"in-encounter\",\"exploring\");\n  }\n  draw();try{renderGame();}catch(e){}\n }\n window.addEventListener(\"pageshow\",restoreExplorationState);\n restoreExplorationState();" + app.slice(controllerEnd);
+patchOne(
+  "function move(dir){if(!active||encounterLock)return;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;const nx=player.x+d[0],ny=player.y+d[1];if(blocked(nx,ny))return;player.x=nx;player.y=ny;draw();if(grass.has(nx+','+ny)&&Math.random()<0.22)startWildEncounter();}",
+  "function move(dir){if(!active||encounterLock)return;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;const nx=player.x+d[0],ny=player.y+d[1];if(blocked(nx,ny))return;player.x=nx;player.y=ny;ensureGame();if(!data.game.exploration)data.game.exploration={};data.game.exploration.player={x:player.x,y:player.y};save();draw();if(grass.has(nx+','+ny)&&Math.random()<0.22)startWildEncounter();}",
+  "salvar posição no mapa"
+);
+patchOne(
+  "window.openIbrahimExploration=function(){active=true;document.getElementById(\"ibrahimGame\").classList.add(\"exploring\");screen.hidden=false;draw();status.textContent='Explore com cuidado. Há criaturas escondidas na grama!';screen.scrollIntoView({behavior:'smooth',block:'center'});};",
+  "window.openIbrahimExploration=function(){ensureGame();const g=data.game.exploration;if(g&&g.player){player.x=Math.max(0,Math.min(cols-1,Number(g.player.x)||0));player.y=Math.max(0,Math.min(rows-1,Number(g.player.y)||0));}active=true;document.getElementById(\"ibrahimGame\").classList.remove(\"in-encounter\");document.getElementById(\"ibrahimGame\").classList.add(\"exploring\");screen.hidden=false;draw();status.textContent='Explore com cuidado. Há criaturas escondidas na grama!';screen.scrollIntoView({behavior:'smooth',block:'center'});};",
+  "reabrir mapa salvo"
+);
+const inline = [...app.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(x=>x[1]).filter(x=>x.trim());
+for (let i=0;i<inline.length;i++) { try { new Function(inline[i]); } catch(e) { throw new Error("JavaScript inválido no script inline "+i+": "+e.message); } }
+fs.writeFileSync(file, app);
+console.log("v1.38 aplicada; scripts inline validados: "+inline.length);
