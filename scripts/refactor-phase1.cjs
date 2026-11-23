@@ -74,11 +74,13 @@ console.log("Refatoração da Fase 1 preparada.");
 // v1.38: stabilize exploration encounters, persistence, capture and the complete shop.
 let app = fs.readFileSync(file, "utf8");
 function patchOne(oldText, newText, label) {
+  if (app.includes(newText)) return;
   const count = app.split(oldText).length - 1;
   if (count !== 1) throw new Error(label + ": esperado 1 trecho, encontrado " + count);
   app = app.replace(oldText, newText);
 }
 function patchLast(oldText, newText, label) {
+  if (app.includes(newText)) return;
   const at = app.lastIndexOf(oldText);
   if (at < 0) throw new Error(label + ": trecho não encontrado");
   app = app.slice(0, at) + newText + app.slice(at + oldText.length);
@@ -95,6 +97,11 @@ patchOne(
   " return 12+[\"weapon\",\"pet\",\"armor\"].reduce((v,k)=>{let it=gameStore.find(x=>x.id===data.game.equipped[k]);return v+(it?it.power:0)},0);",
   " const captured=(data.game.capturedCompanions||[]).find(x=>x.id===data.game.equipped.pet);\n return 12+[\"weapon\",\"pet\",\"armor\"].reduce((v,k)=>{let it=gameStore.find(x=>x.id===data.game.equipped[k]);return v+(it?it.power:0)},0)+(captured?3:0);",
   "força do companheiro capturado"
+);
+patchOne(
+  "story('🪢 Você conquistou a amizade da Raposa Guardiã! Ela acompanhará Ibrahim.');busy=true;setTimeout(enemyTurn,550);return;",
+  "story('🪢 Você conquistou a amizade da Raposa Guardiã! Ela acompanhará Ibrahim.');busy=false;setTimeout(enemyTurn,550);return;",
+  "liberar o turno após capturar companheiro"
 );
 patchLast(
   " window.ensureGame=ensure;\n window.enemyTurn=enemyTurn;",
