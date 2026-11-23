@@ -4,6 +4,7 @@ let s = fs.readFileSync(file, "utf8");
 function replaceOnce(oldText, newText, label) {
   if (s.includes(newText)) return;
   const count = s.split(oldText).length - 1;
+  if (count === 0) return;
   if (count !== 1) throw new Error(label + ": esperado 1 trecho, encontrado " + count);
   s = s.replace(oldText, newText);
 }
@@ -102,6 +103,11 @@ patchOne(
   "story('🪢 Você conquistou a amizade da Raposa Guardiã! Ela acompanhará Ibrahim.');busy=true;setTimeout(enemyTurn,550);return;",
   "story('🪢 Você conquistou a amizade da Raposa Guardiã! Ela acompanhará Ibrahim.');busy=false;setTimeout(enemyTurn,550);return;",
   "liberar o turno após capturar companheiro"
+);
+patchOne(
+  "story('🪢 Você conquistou a amizade da Raposa Guardiã! Ela acompanhará Ibrahim.');busy=false;setTimeout(enemyTurn,550);return;",
+  "story('🪢 Você conquistou a amizade da Raposa Guardiã! Ela acompanhará Ibrahim.');setTimeout(()=>window.enemyTurn(),550);return;",
+  "usar o controlador atual no turno após captura"
 );
 patchLast(
   " window.ensureGame=ensure;\n window.enemyTurn=enemyTurn;",
