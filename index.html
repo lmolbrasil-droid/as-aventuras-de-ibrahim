@@ -781,7 +781,7 @@ function equipGameItem(id){ensureGame();const it=gameStore.find(x=>x.id===id);if
 function openBattleBag(){ensureGame();const root=document.getElementById("battleBagItems");root.innerHTML="";const list=[{id:"medicine",name:"Remédio",emoji:"🧪",desc:"Recupera 35 de vida."},{id:"injection",name:"Cura",emoji:"✨",desc:"Recupera toda a vida."},{id:"rope",name:"Rede de captura",emoji:"🕸️",desc:"Captura personagem amigável."},{id:"smoke",name:"Bomba de fumaça",emoji:"💨",desc:"Foge da batalha."}];list.forEach(it=>{const n=data.game.inventory[it.id]||0;const row=document.createElement("div");row.className="bag-item";const label=document.createElement("span");label.textContent=it.emoji+" "+it.name+" · "+n+" disponível(is)";const b=document.createElement("button");b.textContent="Usar";b.disabled=n<=0;b.onclick=()=>useBagItem(it.id);row.append(label,b);root.append(row);});document.getElementById("battleBagModal").hidden=false;}
 function closeBattleBag(){document.getElementById("battleBagModal").hidden=true;}
 function useBagItem(id){ensureGame();const inv=data.game.inventory;if((inv[id]||0)<=0)return;const c=data.game.combat,b=data.game.dailyBattle[todayKey];if(!b||b.won)return;
- if(id==="medicine")c.hp=Math.min(c.maxHp,c.hp+35);if(id==="injection")c.hp=c.maxHp;if(id==="rope"){alert("A corda só poderá ser usada quando um personagem amigável aparecer na aventura.");return;}if(id==="smoke"){b.escaped=true;closeBattleBag();document.getElementById("gameStory").textContent="Ibrahim lançou a fumaça e conseguiu fugir da batalha!";save();renderGame();return;}
+ if(id==="medicine")c.hp=Math.min(c.maxHp,c.hp+35);if(id==="injection")c.hp=c.maxHp;if(id==="rope"){if(!data.game.exploration?.inEncounter||data.game.exploration.boss){alert("A rede só pode ser usada em encontros selvagens.");return;}inv[id]--;const e=gameEnemy();data.game.capturedCompanions.push({id:e[3],name:e[0],emoji:e[1]});closeBattleBag();save();returnFromIbrahimEncounter();return;}if(id==="smoke"){inv[id]--;b.escaped=true;closeBattleBag();document.getElementById("gameStory").textContent="Ibrahim lançou a fumaça e conseguiu fugir da batalha!";save();renderGame();return;}
  inv[id]--;closeBattleBag();save();renderGame();playCombatSound("shield");document.getElementById("gameStory").textContent=id==="medicine"?"Ibrahim usou um remédio e recuperou 35 pontos de vida!":"A Injeção Vital restaurou toda a vida de Ibrahim!";setTimeout(enemyTurn,500);
 }
 function doubleStrike(){ensureGame();if(combatBusy)return;const b=data.game.dailyBattle[todayKey]||{hp:gameEnemy()[2],won:false,attacks:0};if(b.won||data.game.combat.hp<=0)return;if(b.doubleUsed){document.getElementById("gameStory").textContent="O Ataque em Dupla já foi usado nesta batalha!";return;}combatBusy=true;b.doubleUsed=true;const damage=gamePower()*3+25;b.hp=Math.max(0,b.hp-damage);data.game.dailyBattle[todayKey]=b;setHeroPose("attack",1100);setEnemyPose("hurt",1000);playCombatSound("skill");animateBattleHit(damage);if(b.hp<=0)finishGuardianVictory(b,gameEnemy());save();renderGame();if(b.hp<=0){combatBusy=false;setTimeout(()=>showBattleVictory(gameEnemy()),850);}else setTimeout(()=>{combatBusy=false;enemyTurn()},900);}
@@ -882,7 +882,7 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
     const b=battle(); if(b.won)return;
     b.won=true;
     if(!b.rewardClaimed){data.game.diamonds=(Number(data.game.diamonds)||0)+2;b.rewardClaimed=true;}
-    if(!data.game.wonStages.includes(Number(data.game.stage)))data.game.wonStages.push(Number(data.game.stage));
+    if((!data.game.exploration?.inEncounter||data.game.exploration.boss)&&!data.game.wonStages.includes(Number(data.game.stage)))data.game.wonStages.push(Number(data.game.stage));
     safeSave();
     busy=false;
     try{setEnemyPose('defeated',0);playCombatSound('win');}catch(e){}
@@ -987,7 +987,7 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
   window.exploreNext=()=>{
     const b=battle();if(advancing||(!b.won&&!b.escaped))return;
     advancing=true;busy=false;window.closeBattleBag();window.closeBattleVictory();
-    data.game.stage=Math.max(1,Number(data.game.stage)||1)+1;
+    data.game.stage=1;
     const next=gameEnemy();
     const capture=(data.game.stage%5===0);
     data.game.dailyBattle[todayKey]={stage:Number(data.game.stage),hp:next[2],won:false,escaped:false,attacks:0,doubleUsed:false,rewardClaimed:false,captureAvailable:capture,guardActive:false};
@@ -1232,7 +1232,7 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
      const owned=data.game.owned.includes(item.id),qty=data.game.inventory[item.id]||0;
      const equipped=data.game.equipped[item.type]===item.id;
      const card=document.createElement('article');card.className='reward-card game-item';
-     const art=document.createElement('div');art.className='game-item-art';art.textContent=item.emoji;
+     const art=document.createElement('div');art.className='game-item-art';const img=document.createElement('img');img.src=item.art;img.alt=item.name;art.append(img);
      const name=document.createElement('strong');name.textContent=item.name;
      const desc=document.createElement('small');desc.textContent=item.desc;
      const price=document.createElement('b');price.className='reward-price';price.textContent=item.price+(item.currency==='diamonds'?' 💎 diamantes':' 🪙 moedas');
@@ -1271,17 +1271,19 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
  'use strict';
  const canvas=document.getElementById('ibrahimExploreCanvas');if(!canvas)return;
  const ctx=canvas.getContext('2d'),screen=document.getElementById('ibrahimExploreScreen'),status=document.getElementById('exploreStatus');
- const tile=30,cols=18,rows=12,player={x:2,y:2};let active=false,encounterLock=false;
+ const tile=30,cols=18,rows=12,player={x:2,y:2},dog={x:1,y:2};let active=false,encounterLock=false;
+ const heroArt=new Image(),dogArt=new Image();heroArt.src='assets/ibrahim_idle.png';dogArt.src='assets/companion_dog.png';heroArt.onload=dogArt.onload=()=>draw();
+ function sprite(img,x,y){if(img.complete&&img.naturalWidth){const h=34,w=h*img.naturalWidth/img.naturalHeight;ctx.drawImage(img,x*tile+(tile-w)/2,y*tile+tile-h,w,h);}}
  const grass=new Set();for(let y=5;y<=9;y++)for(let x=8;x<=15;x++)if((x+y)%5!==0)grass.add(x+','+y);
  const trees=new Set();[[0,0],[1,0],[4,0],[7,0],[11,0],[15,0],[17,0],[0,3],[4,3],[6,2],[16,3],[17,5],[1,10],[4,11],[7,10],[16,10],[17,11],[10,2],[12,3]].forEach(p=>trees.add(p[0]+','+p[1]));
- function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const k=x+','+y;ctx.fillStyle=(x+y)%2?'#69ad5c':'#75b967';ctx.fillRect(x*tile,y*tile,tile,tile);if(grass.has(k)){ctx.fillStyle='#3e914b';ctx.fillRect(x*tile,y*tile,tile,tile);ctx.fillStyle='#a4d66c';for(let n=0;n<4;n++)ctx.fillRect(x*tile+5+n*6,y*tile+8+(n%2)*7,3,12);}if(trees.has(k)){ctx.fillStyle='#65442e';ctx.fillRect(x*tile+12,y*tile+15,7,14);ctx.font='25px sans-serif';ctx.fillText('🌳',x*tile+1,y*tile+22);}}ctx.font='25px sans-serif';ctx.fillText('🧒',player.x*tile+1,player.y*tile+25);ctx.fillStyle='#fff';ctx.font='bold 12px system-ui';ctx.fillText('FLORESTA ENCANTADA',10,17);}
+ function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const k=x+','+y;ctx.fillStyle=(x+y)%2?'#69ad5c':'#75b967';ctx.fillRect(x*tile,y*tile,tile,tile);if(grass.has(k)){ctx.fillStyle='#3e914b';ctx.fillRect(x*tile,y*tile,tile,tile);ctx.fillStyle='#a4d66c';for(let n=0;n<4;n++)ctx.fillRect(x*tile+5+n*6,y*tile+8+(n%2)*7,3,12);}if(trees.has(k)){ctx.fillStyle='#65442e';ctx.fillRect(x*tile+12,y*tile+15,7,14);ctx.font='25px sans-serif';ctx.fillText('🌳',x*tile+1,y*tile+22);}}sprite(dogArt,dog.x,dog.y);sprite(heroArt,player.x,player.y);ctx.fillStyle='#d6a34d';ctx.fillRect(16*tile+4,1*tile+4,22,22);ctx.fillStyle='#26372b';ctx.font='20px sans-serif';ctx.fillText('♛',16*tile+5,1*tile+23);ctx.fillStyle='#fff';ctx.font='bold 12px system-ui';ctx.fillText('FLORESTA ENCANTADA',10,17);}
  function blocked(x,y){return x<0||y<0||x>=cols||y>=rows||trees.has(x+','+y);}
- function move(dir){if(!active||encounterLock)return;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;const nx=player.x+d[0],ny=player.y+d[1];if(blocked(nx,ny))return;player.x=nx;player.y=ny;ensureGame();if(!data.game.exploration)data.game.exploration={};data.game.exploration.player={x:player.x,y:player.y};save();draw();if(grass.has(nx+','+ny)&&Math.random()<0.22)startWildEncounter();}
+ function move(dir){if(!active||encounterLock)return;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;const nx=player.x+d[0],ny=player.y+d[1];if(blocked(nx,ny))return;dog.x=player.x;dog.y=player.y;player.x=nx;player.y=ny;ensureGame();if(!data.game.exploration)data.game.exploration={};data.game.exploration.player={x:player.x,y:player.y};save();draw();if(nx===16&&ny===1)startWildEncounter(true);else if(grass.has(nx+','+ny)&&Math.random()<0.22)startWildEncounter();}
  window.openIbrahimExploration=function(){ensureGame();const g=data.game.exploration;if(g&&g.player){player.x=Math.max(0,Math.min(cols-1,Number(g.player.x)||0));player.y=Math.max(0,Math.min(rows-1,Number(g.player.y)||0));}active=true;document.getElementById("ibrahimGame").classList.remove("in-encounter");document.getElementById("ibrahimGame").classList.add("exploring");screen.hidden=false;draw();status.textContent='Explore com cuidado. Há criaturas escondidas na grama!';screen.scrollIntoView({behavior:'smooth',block:'center'});};
  window.closeIbrahimExploration=function(){active=false;document.getElementById("ibrahimGame").classList.remove("exploring");screen.hidden=true;};
  document.querySelectorAll('[data-move]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();move(b.dataset.move);}));
  window.addEventListener('keydown',e=>{if(!active)return;const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};if(m[e.key]){e.preventDefault();move(m[e.key]);}});
- function startWildEncounter(){
+ function startWildEncounter(boss=false){
   if(encounterLock)return;
   encounterLock=true;ensureGame();
   const g=data.game;if(!g.exploration)g.exploration={};
@@ -1292,8 +1294,8 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
    ["Dragãozinho Selvagem","🐉",38,"dragon","FLORESTA ENCANTADA"],
    ["Sombra da Floresta","🌑",44,"shadow","FLORESTA ENCANTADA"]
   ];
-  const enemy=wildEnemies[Math.floor(Math.random()*wildEnemies.length)];
-  g.exploration.activeEnemy=enemy;g.exploration.inEncounter=true;
+  const enemy=boss?["Arborian, Guardião da Floresta","👹",40,"guardian","FLORESTA ENCANTADA"]:wildEnemies[Math.floor(Math.random()*wildEnemies.length)];
+  g.exploration.activeEnemy=enemy;g.exploration.inEncounter=true;g.exploration.boss=boss;
   g.exploration.player={x:player.x,y:player.y};
   const stage=Math.max(1,Number(g.stage)||1);
   g.dailyBattle[todayKey]={stage,hp:enemy[2],won:false,escaped:false,attacks:0,doubleUsed:false,rewardClaimed:false,chestOpened:false,captureAvailable:true,guardActive:false,exploration:true};
@@ -1305,10 +1307,11 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
   root.scrollIntoView({behavior:'smooth',block:'start'});
  }
  window.returnFromIbrahimEncounter=function(){
+   window.closeBattleVictory();window.closeBattleBag();
   const g=data.game;if(!g||!g.exploration||!g.exploration.inEncounter)return;
   if(g.exploration.hadBattle)g.dailyBattle[todayKey]=g.exploration.savedBattle;
   else delete g.dailyBattle[todayKey];
-  g.exploration.inEncounter=false;g.exploration.activeEnemy=null;
+  g.exploration.inEncounter=false;g.exploration.activeEnemy=null;g.exploration.boss=false;
   g.exploration.savedBattle=null;g.exploration.hadBattle=false;
   g.exploration.player={x:player.x,y:player.y};
   save();renderGame();
@@ -1334,4 +1337,4 @@ render();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))na
  restoreExplorationState();
  draw();
 })();
-</script></body></html>
+</script><script src="scripts/phase1-music.js"></script></body></html>
