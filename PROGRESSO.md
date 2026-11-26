@@ -39,3 +39,38 @@ Reconstruir a Floresta Encantada, animar Ibrahim e o cachorro, integrar explora�
 
 - Revisar as capturas e avaliar visualmente os sprites e a mixagem em um aparelho físico. Os testes usaram Chromium automatizado, emulação móvel e amostras do áudio gerado.
 - As alterações estão na cópia local da branch de desenvolvimento. `main` e a publicação no Netlify permanecem intactas.
+
+# Revisão 5
+
+Base local: commit `c8c8a24d8ca1ccc21f9a5f7c12c14f0fd7132646`, na branch `dev-fase1-musica-companheiro`.
+
+## Decisões aprovadas e implementação
+
+- **Personagens.** Atlas de Ibrahim e seu fiel escudeiro com oito quadros por direção e pose parada. As camadas usam os renders oficiais de corpo inteiro, com passos articulados e reconstrução das vistas traseiras. O cachorro mantém o rastro da Revisão 4.
+- **Dois guardiões.** Arborian é o guardião da capa e o único chefe da Floresta Encantada. As novas poses usam recortes da capa oficial, com reconstrução das patas, da silhueta encoberta e das folhas. O chefe anterior e o SVG legado continuam nos caminhos originais, reservados para definição futura. A capa e ambas as imagens anteriores conservam os bytes da Revisão 4.
+- **Áudio.** As três composições da Revisão 4 foram preservadas. O áudio agora tenta retomar em gestos válidos, inclusive na soltura do toque, e volta de uma suspensão. Há fallback para o fade quando a API `cancelAndHoldAtTime` não existe. Foi corrigido o agendamento que usava o começo do compasso como prazo, o que podia adiar repetidamente notas do meio do compasso. A fanfarra de vitória e os novos efeitos usam síntese local.
+- **Combate.** Ataque normal tem preparação e impacto. Ataque Duplo executa o golpe de Ibrahim e o do cachorro com impactos separados e conserva o dano total anterior. Defesa mantém redução de 60%. A clava do Ogro e as raízes de Arborian têm animação e efeitos próprios. As ações bloqueiam os comandos até o fim do turno e o contra-ataque pendente pode ser retomado após um recarregamento.
+- **Vitória.** Queda do inimigo, comemoração de Ibrahim e do cachorro, fanfarra, confetes e recompensas. CONTINUAR é liberado após cerca de cinco segundos do anúncio. A vitória do Ogro também aguarda o comando. O baú do chefe continua disponível e a concessão de diamantes e do baú é registrada no estado salvo.
+- **Mochila, loja e coletas.** A mochila pausa o mapa. Remédio e Cura podem ser usados na exploração. Doce do Sono custa 35 moedas, funciona contra ambos os inimigos e impede duas rodadas ofensivas sem acumular. Os quatro preços existentes continuam iguais. Dez coletas fixas distribuem os cinco consumíveis, moedas, diamante e baús por áreas transitáveis. A concessão e a marca de coleta são gravadas juntas. O terreno da Revisão 4 foi preservado.
+- **PWA.** Cache `ibrahim-v153-phase1-r5`, scripts com identificação de revisão e novas artes locais no conjunto offline. A chave do progresso permaneceu a mesma.
+
+## Testes e evidências
+
+- `node scripts/test-phase1.cjs` com Chromium, Pixel 7 emulado, toque, teclado e viewport móvel. O roteiro verifica os quatro sentidos de caminhada e o rastro, abertura da mochila e uso dos dois curativos, cinco itens e compra do Doce, duas rodadas de sono contra Ogro e Arborian, golpes e defesa, vitória sem recompensa duplicada, coletas alcançáveis e persistentes, derrota e tela cheia nativa no desktop.
+- O analisador captou as três trilhas e a fanfarra. A exploração repetiu a primeira nota ao completar os 16 compassos, com a política de autoplay ativa. Os testes exercitaram retomada do AudioContext, fade sem `cancelAndHoldAtTime`, silêncio do controle de música e reprodução com a página offline.
+- Uma origem local serviu a Revisão 4 e depois a Revisão 5. O novo service worker assumiu o controle, removeu o cache anterior, entregou a nova arte e preservou saldo, mochila e posição na recarga offline.
+- As dez coletas também foram exercitadas por movimento no Chromium. Os créditos corresponderam ao tipo de recompensa e as marcas persistiram após recarga.
+- As capturas e os vídeos ficam fora do repositório, em `/workspace/shared/downloads/revisao-5`. As gravações de tela não incluem áudio. A saída de áudio foi avaliada por analisador no navegador.
+
+## Limitações e próximas etapas
+
+- O teste no Android foi emulado. A causa exata da falha relatada no aparelho físico, o volume no alto-falante e a retomada após interrupções do sistema ainda precisam de validação em hardware.
+- As vistas que a arte oficial não mostra e as regiões ocultas de Arborian são reconstruções. A conformidade artística final cabe à avaliação das capturas pelo proprietário.
+- Nenhum serviço externo pago, Picsart ou crédito foi utilizado. As alterações permanecem locais, aguardando autorização para envio e eventual deploy de teste.
+
+## Arquivos da revisão
+
+- Entrada e cache: `index.html`, `sw.js`.
+- Jogo: `scripts/phase1-combat.js`, `scripts/phase1-loot.js`, `scripts/phase1-music.js`, `scripts/phase1-sprites.js`, `scripts/phase1-world.js` e `scripts/phase1.css`.
+- Arte: `assets/arborian/{idle,attack,defend,hurt,defeated}.webp`, `assets/walk-ibrahim.webp`, `assets/walk-dog.webp`, `assets/item-backpack.svg` e `assets/item-sleep.svg`.
+- Validação e continuidade: `scripts/test-phase1.cjs`, `AGENTS.md` e `PROGRESSO.md`.

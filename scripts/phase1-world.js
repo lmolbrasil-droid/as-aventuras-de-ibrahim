@@ -7,6 +7,7 @@
   const status=document.getElementById('exploreStatus');
   const intro=document.getElementById('encounterIntro');
   const fullscreen=document.getElementById('worldFullscreen');
+  const bag=document.getElementById('battleBagModal');
   const terrain=forestTerrain;
   const directions={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
   const keys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
@@ -69,7 +70,7 @@
   }
 
   function startStep(dir,time){
-    if(mode!=='map'||step)return;
+    if(mode!=='map'||step||!bag.hidden)return;
     const [dx,dy]=directions[dir], x=player.x+dx,y=player.y+dy;
     player.dir=dir;
     if(terrain.blocked(x,y))return;
@@ -82,8 +83,16 @@
     step=null;
     const saved=state();
     if(saved.cooldown>0)saved.cooldown--;
-    persistPosition();
     const {x,y}=player;
+    const reward=forestLoot.collect(x,y);
+    persistPosition();
+    if(reward){
+      status.textContent=reward;
+      status.animate([{color:'#fff2a3',background:'#415e37'},{color:'#fff0c8'}],1000);
+      renderShop();
+      document.getElementById('coinBalance').textContent=data.coins.toLocaleString('pt-BR')+' 🪙';
+      return;
+    }
     const boss=terrain.arena;
     if(x===boss.x&&y===boss.y&&!saved.arborianDefeated){
       encounter(true);
@@ -132,6 +141,7 @@
     const frame=step?Math.min(7,Math.floor(tween*8)):8;
     ctx.setTransform(zoom*ratio,0,0,zoom*ratio,-camera.x*zoom*ratio,-camera.y*zoom*ratio);
     terrain.draw(ctx,view,[
+      ...forestLoot.actors(ctx,time),
       {...d,draw:()=>forestSprites.draw(ctx,'dog',d.x,d.y,dog.dir,frame)},
       {...p,draw:()=>forestSprites.draw(ctx,'hero',p.x,p.y,player.dir,frame)}
     ],time);
@@ -148,7 +158,8 @@
   }
   function close(){
     if(mode!=='map')return;
-    if(step){step=null;persistPosition();}
+    if(!bag.hidden){closeBattleBag();return;}
+    if(step){player=step.from;dog=step.dogFrom;step=null;}
     held=null;
     queuedDirection=null;
     if(document.fullscreenElement===root)document.exitFullscreen().catch(()=>{});
@@ -179,25 +190,28 @@
   }
   function showBattle(){
     setMode('battle');
+    setHeroPose(currentBattle().won?'victory':'idle',0);
     setEnemyPose(currentBattle().won?'defeated':'idle',0);
     document.getElementById('gameStory').textContent='Escolha seu próximo movimento.';
     refreshForestBattle();
     const battle=currentBattle();
     if(battle.won||data.game.combat.hp<=0)resolveBattle(battle);
     else if(battle.escaped)returnFromIbrahimEncounter();
+    else window.resumeForestTurn();
   }
   function resolveBattle(battle){
     clearTimeout(resultTimer);
-    if(battle.won&&state().boss){
-      state().arborianDefeated=true;
+    const firstCelebration=battle.won&&!Number.isFinite(battle.celebrateUntil);
+    if(firstCelebration){
+      battle.celebrateUntil=Date.now()+5700;
+      if(state().boss)state().arborianDefeated=true;
       save();
     }
     resultTimer=setTimeout(()=>{
       if(mode!=='battle'||currentBattle()!==battle)return;
-      if(!battle.won)showDefeatScreen();
-      else if(state().boss)showBattleVictory(gameEnemy());
-      else returnFromIbrahimEncounter();
-    },battle.won&&!state().boss?2000:720);
+      if(battle.won)showBattleVictory(gameEnemy());
+      else showDefeatScreen();
+    },battle.won?(firstCelebration?700:0):520);
   }
   function returnToMap(){
     const saved=state();
@@ -219,7 +233,7 @@
   }
 
   function press(dir,token){
-    if(mode!=='map')return;
+    if(mode!=='map'||!bag.hidden)return;
     const now=performance.now();
     held={dir,token,next:now+250};
     if(step)queuedDirection=dir;
@@ -240,7 +254,7 @@
     });
   }
   window.addEventListener('keydown',e=>{
-    if(mode!=='map'||!keys[e.key]||e.altKey||e.ctrlKey||e.metaKey)return;
+    if(mode!=='map'||!bag.hidden||!keys[e.key]||e.altKey||e.ctrlKey||e.metaKey)return;
     e.preventDefault();
     if(!e.repeat)press(keys[e.key],e.key);
   });
@@ -259,7 +273,14 @@
   window.closeIbrahimExploration=close;
   window.returnFromIbrahimEncounter=returnToMap;
   window.forestWorld={
-    get presenting(){return mode==='intro';},
+    get fighting(){return mode==='battle';},
+    get walking(){return mode==='map';},
+    openBag(){
+      if(mode!=='map')return;
+      if(step){player=step.from;dog=step.dogFrom;step=null;}
+      held=null;queuedDirection=null;
+      window.openMapBag();
+    },
     resolveBattle
   };
 

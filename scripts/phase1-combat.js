@@ -1,0 +1,224 @@
+/* One turn owns the controls, from the wind-up to the end of the counterattack. */
+(() => {
+  const $=id=>document.getElementById(id);
+  const scene=$('battleScene'),effect=$('forestImpact'),modal=$('battleBagModal');
+  const sleepId='sleepCandy';
+  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const current=()=>data.game.dailyBattle[todayKey];
+  let busy=false;
+  const story=message=>{$('gameStory').textContent=message;};
+  const ready=b=>!!(window.forestWorld?.fighting&&b&&!b.won&&!b.escaped&&data.game.combat.hp>0);
+  const sound=name=>forestMusic.effect(name);
+
+  function refresh(){
+    renderGame();
+    const b=current(),disabled=busy||!ready(b);
+    for(const id of ['attackBtn','defendBtn','doubleBtn','bagBtn']){
+      $(id).disabled=disabled||(id==='doubleBtn'&&!!b?.doubleUsed);
+    }
+    scene.classList.toggle('turn-locked',busy);
+  }
+
+  function cue(name){
+    effect.dataset.cue='';
+    void effect.offsetWidth;
+    effect.dataset.cue=name;
+    sound(name);
+  }
+  function hitNumber(damage,target){
+    const number=$('damageNumber');
+    number.dataset.target=target;
+    number.textContent='−'+damage;
+    number.classList.remove('damage-pop');void number.offsetWidth;number.classList.add('damage-pop');
+  }
+  function finish(b){
+    b.hp=0;b.won=true;b.pendingEnemy=false;
+    if(!b.rewardClaimed){
+      data.game.diamonds+=2;
+      b.rewardClaimed=true;
+    }
+    if(data.game.exploration.boss){
+      const stage=Number(data.game.stage);
+      if(!data.game.wonStages.includes(stage))data.game.wonStages.push(stage);
+      data.game.exploration.arborianDefeated=true;
+    }
+    save();
+    setHeroPose('victory',0);
+    setEnemyPose('defeated',0);
+    story('Vitória! Ibrahim e seu fiel escudeiro ganharam 2 diamantes.');
+    window.forestWorld.resolveBattle(b);
+  }
+  async function enemyTurn(b){
+    const combat=data.game.combat;
+    if(b.sleepTurns>0){
+      b.sleepTurns--;
+      b.guardActive=false;
+      b.pendingEnemy=false;
+      save();refresh();
+      cue('sleep');
+      story(b.sleepTurns?'O inimigo dormiu e perdeu a vez.':'O inimigo perdeu a vez e despertou.');
+      await wait(710);
+      return;
+    }
+    const boss=data.game.exploration.boss,guarded=!!b.guardActive;
+    const raw=b.counterDamage??(10+Math.floor(Math.random()*9));
+    b.counterDamage=raw;
+    b.pendingEnemy=true;
+    save();
+    scene.dataset.motion=boss?'arborian-windup':'ogre-windup';
+    if(guarded)setHeroPose('defend',0);
+    setEnemyPose('attack',0);
+    cue(boss?'leaves':'ogre-charge');
+    story(boss?'Arborian reuniu a energia das raízes.':'O Ogro ergueu sua clava.');
+    await wait(630);
+    const damage=Math.max(1,Math.round(raw*(guarded?.4:1)));
+    combat.hp=Math.max(0,combat.hp-damage);
+    combat.guard=0;b.guardActive=false;b.pendingEnemy=false;delete b.counterDamage;
+    save();
+    setHeroPose(guarded?'defend':'hurt',830);
+    effect.dataset.guard=guarded?'on':'';
+    cue(boss?'roots':'club');
+    if(guarded)sound('block');
+    hitNumber(damage,'hero');
+    refresh();
+    story(guarded?'O escudo bloqueou 60% do golpe. Ibrahim perdeu '+damage+' de vida.':'Ibrahim perdeu '+damage+' de vida.');
+    await wait(860);
+    setEnemyPose('idle',0);
+    if(!combat.hp)window.forestWorld.resolveBattle(b);
+  }
+
+  async function run(action){
+    const b=current();
+    if(busy||!ready(b))return;
+    busy=true;refresh();
+    try{await action(b);}
+    finally{
+      scene.dataset.motion='';
+      effect.dataset.cue='';effect.dataset.guard='';
+      busy=false;
+      refresh();
+    }
+  }
+  function attack(double){
+    return run(async b=>{
+      if(double&&b.doubleUsed)return;
+      const combatPower=gamePower();
+      const total=double?combatPower*3+25:combatPower+Math.floor(Math.random()*7)+4;
+      const first=double?Math.max(1,Math.round(total*.43)):total;
+      const blows=double?[first,total-first]:[total];
+      story(double?'Ibrahim e seu fiel escudeiro preparam um golpe combinado.':'Ibrahim prepara o Corte Relâmpago.');
+      if(data.game.exploration.boss){
+        setEnemyPose('defend',0);
+      }
+      for(const [index,damage] of blows.entries()){
+        scene.dataset.motion=index?'companion-windup':'hero-windup';
+        if(!index)setHeroPose('ready',0);
+        await wait(index?410:460);
+        scene.dataset.motion=index?'companion-strike':'hero-strike';
+        setHeroPose(index?'idle':'attack',0);
+        setEnemyPose('hurt',0);
+        cue(index?'companion':'slash');
+        b.hp=Math.max(0,b.hp-damage);hitNumber(damage,'enemy');refresh();
+        await wait(index?680:610);
+      }
+      b.doubleUsed=double||b.doubleUsed;
+      b.attacks=(b.attacks||0)+1;
+      setHeroPose('idle',0);
+      if(!b.hp){finish(b);return;}
+      b.pendingEnemy=true;
+      save();
+      await enemyTurn(b);
+    });
+  }
+  function defend(){
+    return run(async b=>{
+      b.guardActive=true;b.pendingEnemy=true;save();
+      setHeroPose('defend',0);cue('ward');
+      story('Ibrahim ergueu o escudo.');
+      await wait(560);
+      await enemyTurn(b);
+      setHeroPose('idle',0);
+    });
+  }
+
+  const isHeal=id=>id==='medicine'||id==='injection';
+  function heal(id){
+    const combat=data.game.combat;
+    combat.hp=id==='medicine'?Math.min(combat.hp+35,combat.maxHp):combat.maxHp;
+  }
+  function bag(mode,message=''){
+    if(mode==='battle'&&(busy||!ready(current())))return;
+    const map=mode==='map',inventory=data.game.inventory;
+    const combat=data.game.combat,b=current();
+    modal.dataset.mode=mode;
+    $('bagMessage').textContent=message||'Vida de Ibrahim: '+combat.hp+'/'+combat.maxHp;
+    const items=$('battleBagItems');
+    items.replaceChildren();
+    for(const item of gameStore){
+      const quantity=inventory[item.id]||0;
+      const row=document.createElement('article');row.className='bag-item';
+      const art=document.createElement('img');art.src=item.art;art.alt='';
+      const copy=document.createElement('div');
+      const name=document.createElement('strong');name.textContent=item.name+' · '+quantity;
+      const desc=document.createElement('small');desc.textContent=item.desc;
+      copy.append(name,desc);
+      const use=document.createElement('button');
+      use.type='button';use.textContent='Usar';use.setAttribute('aria-label','Usar '+item.name);
+      const unavailable=map&&!isHeal(item.id)||item.id==='rope'&&!map&&data.game.exploration.boss
+        ||item.id===sleepId&&b?.sleepTurns>0||isHeal(item.id)&&combat.hp>=combat.maxHp;
+      use.disabled=!quantity||unavailable;
+      use.addEventListener('click',()=>useItem(item,mode));
+      row.append(art,copy,use);items.append(row);
+    }
+    modal.hidden=false;
+    modal.querySelector('.bag-close').focus();
+  }
+  function useItem(item,mode){
+    if(modal.hidden||modal.dataset.mode!==mode)return;
+    const id=item.id,inventory=data.game.inventory,combat=data.game.combat;
+    if(!inventory[id]||isHeal(id)&&combat.hp>=combat.maxHp)return;
+    if(mode==='map'){
+      if(!window.forestWorld.walking||!isHeal(id))return;
+      inventory[id]--;heal(id);save();renderShop();sound(id);
+      bag('map',item.name+' usado. Vida: '+combat.hp+'/'+combat.maxHp+'.');
+      $('bagMessage').animate([{color:'#2a7552'},{color:'inherit'}],900);
+      return;
+    }
+    return run(async b=>{
+      if(id===sleepId&&b.sleepTurns>0||id==='rope'&&data.game.exploration.boss)return;
+      closeBattleBag();
+      story('Ibrahim usou '+item.name+'.');
+      cue(id);
+      await wait(850);
+      inventory[id]--;
+      if(id===sleepId){
+        b.sleepTurns=2;
+        save();refresh();
+        story('O inimigo adormeceu por duas rodadas.');
+        return;
+      }
+      if(id==='rope'){
+        const enemy=gameEnemy(),companion={id:'companion-'+Date.now(),name:enemy[0],emoji:enemy[1]};
+        data.game.capturedCompanions.push(companion);data.game.equipped.pet=companion.id;
+      }
+      if(id==='rope'||id==='smoke'){
+        b.escaped=true;
+        save();
+        window.returnFromIbrahimEncounter();
+        return;
+      }
+      heal(id);b.pendingEnemy=true;save();refresh();
+      await enemyTurn(b);
+    });
+  }
+
+  window.attackGuardian=()=>attack(false);
+  window.doubleStrike=()=>attack(true);
+  window.defendGuardian=defend;
+  window.openBattleBag=()=>bag('battle');
+  window.openMapBag=()=>bag('map');
+  window.refreshForestBattle=refresh;
+  window.resumeForestTurn=()=>{if(current()?.pendingEnemy)run(enemyTurn);};
+  $('mapBagBtn').addEventListener('click',()=>window.forestWorld.openBag());
+  modal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();closeBattleBag();}});
+})();

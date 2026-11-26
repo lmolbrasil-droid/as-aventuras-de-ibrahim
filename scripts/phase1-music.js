@@ -44,6 +44,7 @@ window.forestMusic = (() => {
     horn:{harmonics:[1,.54,.26,.2,.1,.06],attack:.095,release:.2,vibrato:1.2}
   };
   let ctx, master, dry, reverb, noise, timer, track;
+  let lastVictory=false;
   let requested='',enabled=localStorage.getItem('ibrahimMusic')!=='off';
   const waves={};
   const button=document.getElementById('worldMusic');
@@ -57,6 +58,7 @@ window.forestMusic = (() => {
     if(!Audio||ctx)return;
     ctx=new Audio();
     master=ctx.createGain();master.gain.value=.7;
+    ctx.addEventListener('statechange',activate);
     dry=ctx.createDynamicsCompressor();
     master.connect(dry);dry.connect(ctx.destination);
     reverb=ctx.createConvolver();
@@ -131,9 +133,10 @@ window.forestMusic = (() => {
     return notes.sort((a,b)=>a.beat-b.beat);
   }
   function schedule(){
-    if(!track||ctx.state!=='running')return;
+    if(!track?.score||ctx.state!=='running')return;
     const {score,dest}=track,d=30/score.bpm;
-    if(track.time<ctx.currentTime-.5)track.time=ctx.currentTime+.03;
+    const nextEvent=track.time+track.events[track.index].beat*d;
+    if(nextEvent<ctx.currentTime-.35)track.time+=ctx.currentTime+.03-nextEvent;
     while(track.time+track.events[track.index].beat*d<ctx.currentTime+.19){
       const event=track.events[track.index++];
       const t=track.time+event.beat*d;
@@ -148,12 +151,19 @@ window.forestMusic = (() => {
     }
   }
   function activate(){
-    if(!ctx)return;
+    if(!ctx||ctx.state!=='running')return;
     const mode=enabled&&!document.hidden?requested:'';
+    if(mode!=='victory')lastVictory=false;
+    if(mode==='victory'&&lastVictory)return;
     if(track?.mode===mode)return;
     if(track){
       const gain=track.dest, t=ctx.currentTime;
-      gain.gain.cancelAndHoldAtTime(t);
+      if(typeof gain.gain.cancelAndHoldAtTime==='function')gain.gain.cancelAndHoldAtTime(t);
+      else{
+        const fraction=Math.max(0,Math.min(1,(t-track.started)/.42));
+        gain.gain.cancelScheduledValues(t);
+        gain.gain.setValueAtTime(fraction,t);
+      }
       gain.gain.linearRampToValueAtTime(0,t+.42);
       setTimeout(()=>gain.disconnect(),850);
       track=null;
@@ -162,16 +172,43 @@ window.forestMusic = (() => {
     if(!mode)return;
     const dest=ctx.createGain(),score=scores[mode],t=ctx.currentTime;
     dest.gain.setValueAtTime(0,t);dest.gain.linearRampToValueAtTime(1,t+.42);dest.connect(master);
-    track={mode,score,dest,bar:0,index:0,time:t+.025,events:arrange(mode,score,0)};
+    if(mode==='victory'){
+      lastVictory=true;playVictory(dest,t+.04);
+      track={mode,dest,started:t};
+      return;
+    }
+    track={mode,score,dest,started:t,bar:0,index:0,time:t+.025,events:arrange(mode,score,0)};
     timer=setInterval(schedule,50);schedule();
   }
-  function unlock(){
-    init();
-    if(ctx)ctx.resume().then(activate).catch(()=>{});
+  function playVictory(dest,t){
+    const theme=[[67,0,.28],[72,.26,.36],[76,.56,.42],[79,.9,.47],[81,1.32,.39],
+      [79,1.68,.35],[76,1.99,.29],[77,2.25,.48],[74,2.65,.39],[72,3.03,1.24]];
+    for(const [midi,offset,length] of theme){
+      voice(dest,midi,t+offset,length,.17,'horn');
+      voice(dest,midi+12,t+offset+.015,length*.65,.067,'flute');
+    }
+    for(const [i,notes] of [[48,55,64],[45,57,65],[53,57,65],[43,55,62],[48,55,64]].entries()){
+      const beat=[0,.92,1.71,2.45,3.03][i];
+      for(const [j,midi] of notes.entries()){
+        voice(dest,midi,t+beat+j*.052,.66,.077,'string');
+        voice(dest,midi+12,t+beat+j*.1,.54,.047,'harp');
+      }
+    }
+    drum(dest,t,true,.2);drum(dest,t+3.03,true,.18);
   }
-  document.addEventListener('pointerdown',unlock,{once:true});
-  document.addEventListener('keydown',unlock,{once:true});
-  document.addEventListener('visibilitychange',activate);
+  function unlock(){
+    try{
+      init();
+      if(ctx?.state==='running'){activate();return;}
+      if(ctx)ctx.resume().then(activate).catch(()=>{});
+    }catch(error){console.warn('Áudio da floresta indisponível:',error.message);}
+  }
+  // Android Chrome unlocks touch input on release rather than pointerdown.
+  for(const name of ['pointerup','touchend','click','keydown']){
+    document.addEventListener(name,unlock,{capture:true,passive:true});
+  }
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)activate();else if(ctx)unlock();});
+  window.addEventListener('pageshow',()=>{if(ctx)unlock();});
   button.addEventListener('click',()=>{
     enabled=!enabled;localStorage.setItem('ibrahimMusic',enabled?'on':'off');
     label();unlock();activate();
@@ -179,6 +216,22 @@ window.forestMusic = (() => {
   return {
     unlock,
     setMode(mode){requested=mode;activate();},
+    effect(name){
+      if(!ctx||ctx.state!=='running')return;
+      const patterns={slash:[[76,68,81],'reed',.07],companion:[[52,67,74],'horn',.09],
+        ward:[[62,69,81],'string',.12],block:[[45,72,84],'horn',.06],
+        'ogre-charge':[[36,41],'reed',.15],club:[[32,28],'horn',.08],
+        leaves:[[69,74,81],'harp',.13],roots:[[38,50,63,57],'horn',.09],
+        medicine:[[60,64,72],'harp',.10],injection:[[60,67,76,84],'flute',.09],
+        rope:[[79,62,84],'reed',.08],smoke:[[43,40,35],'flute',.13],
+        sleepCandy:[[74,70,65,58],'string',.15],sleep:[[72,69],'flute',.16],
+        pickup:[[72,79,84],'harp',.06],treasure:[[60,67,72,79,84],'harp',.08]};
+      const pattern=patterns[name];if(!pattern)return;
+      const [notes,voiceName,spacing]=pattern;
+      const t=ctx.currentTime+.015;
+      if(['club','block','roots','smoke','companion'].includes(name))drum(master,t,name!=='smoke',.22);
+      notes.forEach((n,i)=>voice(master,n,t+i*spacing,.23,.16,voiceName));
+    },
     encounter(boss){
       if(!ctx||ctx.state!=='running')return;
       const t=ctx.currentTime+.015;

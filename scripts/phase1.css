@@ -103,3 +103,81 @@ body.world-open { overflow: hidden; }
   width: 26px; height: 26px; border-radius: 50%; background: #17352dec;
   border: 1px solid #dcc78d; font-size: 15px;
 }
+
+/* Inventory, collectible feedback, and combat motion. */
+.map-bag { position: absolute; right: 12px; bottom: 40px; width: 60px; height: 60px;
+  border-radius: 16px; border: 1px solid #f8d89c; background: radial-gradient(#5b6140,#172e29);
+  box-shadow: 0 4px 13px #08161091; cursor: pointer; }
+.map-bag img { width: 100%; height: 100%; padding: 6px; }
+#battleBagModal .bag-box { max-height: 88dvh; overflow: auto; width: min(96vw,480px); color: #213329; }
+#battleBagItems .bag-item { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: center; }
+#battleBagItems img { width: 44px; height: 40px; object-fit: contain; background: #1c3331; border-radius: 8px; }
+#battleBagItems small { display: block; color: #40544c; }
+#bagMessage { font-size: .9rem; }
+#sleepStatus { max-width: 880px; margin: 0 auto; padding: 6px 12px; border-radius: 10px;
+  background: #302741; color: #fae9ff; text-align: center; font-weight: 800; }
+#forestImpact { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
+#forestImpact::before, #forestImpact::after { content: ""; position: absolute; opacity: 0; }
+#forestImpact[data-cue="slash"]::before, #forestImpact[data-cue="companion"]::before {
+  width: 36%; height: 45%; right: 14%; top: 26%; border-radius: 50%;
+  background: conic-gradient(from 20deg,#fff0 22%,#ffe9a0 39%,#fff 47%,#fff0 57%,#fff0);
+  filter: drop-shadow(0 0 11px #ffbe65);
+  animation: slash-r5 .68s both;
+}
+#forestImpact[data-cue="companion"]::before {
+  background: repeating-linear-gradient(126deg,#fff0 0 15%,#baebff 16% 19%,#fff0 20% 26%);
+  filter: drop-shadow(0 0 9px #5cbbff);
+}
+#forestImpact[data-cue="ward"]::before, #forestImpact[data-cue="block"]::before {
+  left: 12%; bottom: 11%; width: 29%; height: 46%; border-radius: 50%;
+  border: 4px double #fff5af; box-shadow: 0 0 21px #ffd182, inset 0 0 20px #ffe68e;
+  background: #ffea7430; animation: aura-r5 .85s both;
+}
+#forestImpact[data-cue="ogre-charge"]::before, #forestImpact[data-cue="club"]::before {
+  left: 12%; right: 12%; bottom: 8%; height: 24%; border-radius: 50%;
+  border: 3px solid #f8ca82; background: radial-gradient(ellipse,#f9b76170,#fff0 65%);
+  animation: aura-r5 .85s both;
+}
+#forestImpact[data-cue="leaves"]::before, #forestImpact[data-cue="roots"]::before {
+  inset: 24% 5% 10%; border-radius: 50%;
+  background: repeating-conic-gradient(from 6deg at 35% 80%,#b0f96cbb 0deg 4deg,#845e2bce 5deg 8deg,#fff0 10deg 30deg);
+  clip-path: polygon(0 100%,8% 47%,17% 72%,26% 24%,39% 65%,52% 19%,58% 66%,79% 51%,72% 84%,98% 71%,100% 100%);
+  animation: roots-r5 .86s both;
+}
+#forestImpact:is([data-cue="medicine"],[data-cue="injection"],[data-cue="rope"],[data-cue="smoke"],[data-cue="sleepCandy"],[data-cue="sleep"])::before {
+  inset: 12% 7% 5%; border-radius: 50%; animation: aura-r5 .85s both;
+}
+#forestImpact[data-cue="medicine"]::before { background: radial-gradient(at 25% 70%,#b8ee85bb,#fff0 40%); }
+#forestImpact[data-cue="injection"]::before { background: radial-gradient(at 25% 70%,#9aeeffc9,#fff0 44%); }
+#forestImpact[data-cue="rope"]::before { inset: 12% 8% 12% 53%; border: 3px solid #f8c57f;
+  background: repeating-linear-gradient(48deg,#fff0 0 9px,#ffd99f88 10px 12px); }
+#forestImpact[data-cue="smoke"]::before { background: radial-gradient(at 30% 70%,#b9c5d9,#53657788 52%,#fff0 75%); }
+#forestImpact:is([data-cue="sleepCandy"],[data-cue="sleep"])::before { content: "✦　☾　✦"; inset: 25% 5% auto 48%; padding: 10px; text-align: center; font-size: 30px; color: #f1ceff; background: #65417e93; }
+#battleScene[data-motion="hero-windup"] #gameHero { animation: brace-r5 .46s both; }
+#battleScene[data-motion="hero-strike"] #gameHero { animation: strike-r5 .61s both; }
+#battleScene[data-motion="companion-windup"] #gameCompanion { animation: brace-r5 .41s both; }
+#battleScene[data-motion="companion-strike"] #gameCompanion { animation: strike-r5 .68s both; }
+#battleScene[data-motion="ogre-windup"] #gameMonster { animation: ogre-r5 1.4s both !important; }
+#battleScene[data-motion="arborian-windup"] #gameMonster { animation: arborian-r5 1.4s both !important; }
+#gameMonster[data-boss="guardian"].enemy-pose-defeated { animation: ogre-collapse .7s ease-out both !important; }
+#damageNumber[data-target="enemy"] { left: auto; right: 19%; top: 22%; }
+#damageNumber[data-target="hero"] { left: 22%; right: auto; top: 26%; }
+.victory-team { display: flex; justify-content: center; align-items: end; height: min(32dvh,200px); }
+.victory-team img { object-fit: contain; height: 100%; width: 55%; animation: cheer-r5 .8s ease-in-out 6 alternate; }
+.victory-team img+img { height: 60%; width: 30%; animation-delay: .16s; }
+@keyframes cheer-r5 { 50% { transform: translateY(-14px) rotate(-6deg); } }
+@keyframes slash-r5 { 0% { opacity: 0; transform: translateX(-24%) scale(.6) rotate(-22deg); } 26% { opacity: 1; } 100% { opacity: 0; transform: translateX(22%) scale(1.3) rotate(18deg); } }
+@keyframes aura-r5 { 0% { opacity: 0; transform: scale(.62); } 32% { opacity: .95; } 100% { opacity: 0; transform: scale(1.16); } }
+@keyframes roots-r5 { 0% { opacity: 0; transform: scaleY(.1) translateY(35%); } 27%,58% { opacity: .9; } 100% { opacity: 0; transform: scaleY(1); } }
+@keyframes brace-r5 { 100% { transform: translateX(-9%) rotate(-8deg) scale(.94); } }
+@keyframes strike-r5 { 0% { transform: translateX(-9%); } 35% { transform: translateX(23%) rotate(5deg); } }
+@keyframes ogre-r5 { 33% { transform: scale(1.12) rotate(9deg); } 58% { transform: translateX(-27%) rotate(-12deg); } }
+@keyframes arborian-r5 { 37% { transform: translateY(-12%) scale(1.07); filter: drop-shadow(0 0 18px #c2f575); } 66% { transform: translateX(-7%) translateY(-4%); } }
+@media (prefers-reduced-motion: reduce) {
+  #battleScene[data-motion] :is(#gameHero,#gameCompanion,#gameMonster), .victory-team img { animation-duration: .01s !important; }
+}
+#forestImpact[data-guard="on"]::after {
+  left: 12%; bottom: 11%; width: 29%; height: 46%; border-radius: 50%;
+  border: 4px double #fff5af; box-shadow: 0 0 21px #ffd182,inset 0 0 20px #ffe68e;
+  background: #ffea7430; animation: aura-r5 .85s both;
+}

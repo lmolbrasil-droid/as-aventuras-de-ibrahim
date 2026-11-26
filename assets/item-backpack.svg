@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 104">
+ <defs><linearGradient id="hide" x2="1" y2="1"><stop stop-color="#f6bd6d"/><stop offset=".45" stop-color="#b36439"/><stop offset="1" stop-color="#542e27"/></linearGradient><linearGradient id="gold"><stop stop-color="#ffe8a5"/><stop offset="1" stop-color="#986039"/></linearGradient></defs>
+ <path d="M34 23v-6c0-15 28-15 28 0v6" fill="none" stroke="#e2aa60" stroke-width="7"/>
+ <path d="M28 21Q48 11 68 21l10 14 6 46q1 15-15 17H27q-16-1-15-17l6-46z" fill="url(#hide)" stroke="#57321f" stroke-width="4"/>
+ <path d="M22 35q26-13 52 0l-3 17q-23 10-46 0z" fill="#d6914e" stroke="#744329" stroke-width="3"/>
+ <path d="M23 68q24-9 50 0v16q0 7-11 8H34q-11-1-11-8z" fill="#a45c36" stroke="#653927" stroke-width="3"/>
+ <path d="M42 42h13v35H42z" fill="#663a2c" stroke="#efb577"/>
+ <rect x="38" y="51" width="21" height="17" rx="3" fill="url(#gold)" stroke="#754b29" stroke-width="2"/>
+ <rect x="43" y="55" width="11" height="9" rx="1" fill="#704430"/>
+ <path d="M27 72q23-8 42 0" fill="none" stroke="#e9b17a" stroke-width="2" stroke-dasharray="3 3"/>
+</svg>

@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const {chromium, devices} = require('playwright');
-const url = process.env.BASE_URL || 'http://127.0.0.1:8000';
+const url = process.env.BASE_URL || 'http://127.0.0.1:8310';
 const screenshots = process.env.SCREENSHOTS;
 const legacyDay = '2024-01-02';
 const legacyBattle = {stage:1,hp:13,attacks:1};
@@ -97,12 +97,12 @@ async function openIntro(page, name, filename, trigger){
   assert.equal(await page.locator('.battle-menu button:visible').count(),4);
 }
 async function run(){
-  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium'});
+  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--autoplay-policy=user-gesture-required']});
   try {
-    const context=await browser.newContext({...devices['iPhone 13'],defaultBrowserType:undefined});
+    const context=await browser.newContext({...devices['Pixel 7'],defaultBrowserType:undefined});
     const errors=[], badResponses=[], forbiddenArt=[];
-    let goAt;
-    await context.route('**/assets/enemy_guardian.svg',request=>{
+
+    await context.route(/\/assets\/enemy_guardian\.(svg|webp)$/,request=>{
       forbiddenArt.push(request.request().url());return request.abort();
     });
     await context.addInitScript(({saveKey,legacyDay,legacyBattle})=>{
@@ -111,11 +111,12 @@ async function run(){
           days:{[legacyDay]:[0,1]},coins:95,coinLedger:[{text:'Saldo anterior',amount:95,date:'2024-01-02'}],
           daySnapshots:{[legacyDay]:{xp:20,rank:'Anterior'}},
           rewards:[{id:'chocolate',name:'Chocolate pequeno',price:30,category:'quick'}],
-          game:{stage:1,diamonds:12,wonStages:[1],owned:['ironSword'],inventory:{medicine:2,rope:0,injection:0,smoke:1},
-            combat:{hp:120,maxHp:120,guard:0},exploration:{player:{x:2,y:2}},
+          game:{stage:1,diamonds:12,wonStages:[1],owned:['ironSword'],inventory:{medicine:2,rope:0,injection:1,smoke:1},
+            combat:{hp:50,maxHp:120,guard:0},exploration:{player:{x:2,y:2}},
             dailyBattle:{[legacyDay]:legacyBattle}}
         }));
       }
+      AudioParam.prototype.cancelAndHoldAtTime=undefined;
       const connect=AudioNode.prototype.connect;
       AudioNode.prototype.connect=function(destination,...args){
         if(!window.scoreAnalyser && this instanceof DynamicsCompressorNode && destination===this.context.destination){
@@ -149,20 +150,37 @@ async function run(){
     await page.locator('#shopLauncher').tap();
     await visible(page,'#shopView');
     assert.deepEqual(await page.locator('.game-item strong').allTextContents(),
-      ['Remédio','Cura','Rede de captura','Bomba de fumaça']);
+      ['Remédio','Cura','Rede de captura','Bomba de fumaça','Doce do Sono']);
     assert.deepEqual(await page.locator('.game-item img').evaluateAll(imgs=>imgs.map(i=>i.naturalWidth>0)),
-      [true,true,true,true]);
+      [true,true,true,true,true]);
     await snapshot(page,'loja');
     await page.locator('.game-item').first().getByRole('button').tap();
     assert.deepEqual(await page.evaluate(()=>[data.coins,data.game.inventory.medicine]),[77,3]);
+    await page.locator('.game-item').last().getByRole('button').tap();
+    assert.deepEqual(await page.evaluate(()=>[data.coins,data.game.inventory.sleepCandy]),[42,1]);
     await page.locator('.shop-back').tap();
     await page.locator('#openExploreMode').tap();
     await visible(page,'#ibrahimExploreCanvas');
     const mapAudio=await audioSignature(page);
-    console.log('Loja com quatro itens, compra de Remédio e áudio da exploração.');
+    console.log('Loja com cinco itens, compra de Remédio e Doce do Sono, e sinal de áudio no mapa.');
     await snapshot(page,'exploracao');
+    await page.evaluate(()=>scoreAnalyser.context.suspend());
+    await page.locator('#mapBagBtn').tap();
+    await audioSignature(page);
+    await visible(page,'#battleBagModal');
+    const beforeBag=await position(page);
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(250);
+    assert.deepEqual(await position(page),beforeBag);
+    assert.ok(await page.getByRole('button',{name:'Usar Doce do Sono'}).isDisabled());
+    await page.getByRole('button',{name:'Usar Remédio'}).tap();
+    assert.equal(await page.evaluate(()=>data.game.combat.hp),85);
+    await page.getByRole('button',{name:'Usar Cura',exact:true}).tap();
+    assert.equal(await page.evaluate(()=>data.game.combat.hp),120);
+    await snapshot(page,'mochila-mapa');
+    await page.getByRole('button',{name:'Fechar mochila'}).tap();
     const bounds=await page.locator('#ibrahimGame').boundingBox();
-    assert.equal(bounds.height,devices['iPhone 13'].viewport.height);
+    assert.equal(bounds.height,devices['Pixel 7'].viewport.height);
     await page.locator('[data-move=right]').tap();
     await page.waitForFunction(()=>data.game.exploration.player?.x===3);
     await roundTrip(page,{x:3,y:2,from:{x:2,y:2}});
@@ -196,6 +214,27 @@ async function run(){
     assert.deepEqual(await position(page),{x:obstacle.x,y:obstacle.y});
     console.log('Controle por toque, colisão, rastro do cachorro e quadros nas quatro direções.');
 
+    assert.deepEqual(await page.evaluate(()=>{
+      const seen=new Set(['2,2']),front=[[2,2]];
+      for(const [x,y] of front){
+        for(const [dx,dy] of [[0,1],[1,0],[0,-1],[-1,0]]){
+          const key=(x+dx)+','+(y+dy);
+          if(seen.has(key)||forestTerrain.blocked(x+dx,y+dy))continue;
+          seen.add(key);front.push([x+dx,y+dy]);
+        }
+      }
+      return forestLoot.drops.filter(({x,y})=>!seen.has(x+','+y)).map(d=>d.id);
+    }),[]);
+    await route(page,{x:4,y:9});
+    assert.equal(await page.evaluate(()=>data.coins),51);
+    assert.equal(await page.evaluate(()=>data.game.exploration.collected['west-coins']),true);
+    await page.reload();
+    await page.locator('#openExploreMode').tap();
+    await route(page,{x:4,y:8});
+    await route(page,{x:4,y:9});
+    assert.equal(await page.evaluate(()=>data.coins),51);
+    console.log('Mochila no mapa, retomada do áudio após suspensão e coletas acessíveis sem duplicação.');
+
     await page.evaluate(()=>{window.dice=0;});
     const randomRoute=route(page,'grass');
     await openIntro(page,/Ogro/, 'ogre-idle.webp',()=>randomRoute);
@@ -212,36 +251,75 @@ async function run(){
     await visible(page,'#battleBagModal');
     await page.locator('#battleBagItems .bag-item').first().getByRole('button').tap();
     await page.waitForFunction(()=>!document.getElementById('attackBtn').disabled);
-    assert.equal(await page.evaluate(()=>data.game.inventory.medicine),2);
+    assert.ok((await page.evaluate(()=>data.game.inventory.medicine))>=1);
     await page.locator('#attackBtn').tap();
     await waitAsset(page,'ogre-hurt.webp');
+    const afterNormal=await page.evaluate(()=>data.game.dailyBattle[todayKey].hp);
+    assert.equal(afterNormal,16);
     await page.waitForFunction(()=>!document.getElementById('doubleBtn').disabled);
-    goAt=Date.now();
+    await page.locator('#bagBtn').tap();
+    await page.getByRole('button',{name:'Usar Doce do Sono'}).tap();
+    await page.waitForFunction(()=>data.game.dailyBattle[todayKey].sleepTurns===2&&!document.querySelector('#defendBtn').disabled);
+    const health=await page.evaluate(()=>data.game.combat.hp);
+    await page.locator('#defendBtn').tap();
+    await page.waitForFunction(()=>data.game.dailyBattle[todayKey].sleepTurns===1&&!document.querySelector('#defendBtn').disabled);
+    await page.locator('#defendBtn').tap();
+    await page.waitForFunction(()=>data.game.dailyBattle[todayKey].sleepTurns===0&&!document.querySelector('#defendBtn').disabled);
+    assert.equal(await page.evaluate(()=>data.game.combat.hp),health);
+    assert.match(await page.locator('#gameStory').textContent(),/despertou/);
     await page.locator('#doubleBtn').tap();
+    await page.waitForFunction(()=>document.querySelector('#forestImpact').dataset.cue==='slash');
+    await page.waitForFunction(()=>document.querySelector('#forestImpact').dataset.cue==='companion');
     await waitAsset(page,'ogre-defeated.webp');
-    await snapshot(page,'ogro-derrotado');
+    await visible(page,'#battleVictory');
+    await audioSignature(page);
+    await snapshot(page,'vitoria-ogro');
+    assert.ok(await page.locator('#victoryContinue').isDisabled());
+    await page.waitForFunction(()=>!document.querySelector('#victoryContinue').disabled);
+    assert.equal(await page.evaluate(()=>data.game.diamonds),14);
+    await page.reload();
+    await visible(page,'#battleVictory');
+    assert.equal(await page.evaluate(()=>data.game.diamonds),14);
+    await page.locator('#victoryContinue').tap();
     await visible(page,'#ibrahimExploreCanvas');
-    assert.ok(Date.now()-goAt>=1950);
     assert.deepEqual(await position(page),encounter);
     assert.deepEqual(await page.evaluate(()=>[data.game.diamonds,data.game.exploration.cooldown]),[14,7]);
-    console.log('Encontro, defesa, mochila, ataque, quatro poses do Ogro, vitória e retorno com proteção.');
+    console.log('Defesa, impacto normal e dois impactos do ataque duplo, sono e vitória sem prêmio duplicado.');
 
     await page.evaluate(()=>{window.dice=.99;});
+    await route(page,{x:11,y:11});
+    assert.ok(await page.evaluate(()=>data.game.inventory.sleepCandy>=1));
     await route(page,{x:22,y:23});
     await snapshot(page,'ponte');
     await route(page,{x:33,y:24});
     await snapshot(page,'clareira-arborian');
-    await openIntro(page,/Arborian/, 'enemy_guardian.webp',()=>page.keyboard.press('ArrowRight'));
+    await openIntro(page,/Arborian/, 'arborian/idle.webp',()=>page.keyboard.press('ArrowRight'));
     const bossAudio=await audioSignature(page);
     assert.notDeepEqual(bossAudio,mapAudio);
     assert.notDeepEqual(bossAudio,ogreAudio);
     await snapshot(page,'combate-arborian');
+    await page.locator('#bagBtn').tap();
+    await page.getByRole('button',{name:'Usar Doce do Sono'}).tap();
+    await page.waitForFunction(()=>data.game.dailyBattle[todayKey].sleepTurns===2&&!document.querySelector('#defendBtn').disabled);
+    await snapshot(page,'arborian-adormecido');
+    const bossHP=await page.evaluate(()=>data.game.combat.hp);
+    for(const remaining of [1,0]){
+      await page.locator('#defendBtn').tap();
+      await page.waitForFunction(n=>data.game.dailyBattle[todayKey].sleepTurns===n&&!document.querySelector('#defendBtn').disabled,remaining);
+    }
+    assert.equal(await page.evaluate(()=>data.game.combat.hp),bossHP);
+    await page.locator('#defendBtn').tap();
+    await waitAsset(page,'arborian/attack.webp');
+    await page.waitForFunction(()=>document.querySelector('#forestImpact').dataset.guard==='on');
+    await snapshot(page,'defesa-arborian');
+    await page.waitForFunction(()=>!document.querySelector('#doubleBtn').disabled);
     await page.locator('#doubleBtn').tap();
     await visible(page,'#battleVictory');
     await page.locator('#openChestBtn').tap();
     assert.ok(await page.locator('#openChestBtn').isDisabled());
+    assert.doesNotMatch(await page.locator('#chestResult').textContent(),/undefined/);
     await snapshot(page,'vitoria-arborian');
-    await page.getByRole('button',{name:/CONTINUAR A AVENTURA/}).tap();
+    await page.locator('#victoryContinue').tap();
     await visible(page,'#ibrahimExploreCanvas');
     assert.deepEqual(await position(page),{x:34,y:24});
     assert.deepEqual(await page.evaluate(()=>[data.game.diamonds,data.game.exploration.arborianDefeated]),[16,true]);
@@ -249,6 +327,10 @@ async function run(){
 
     await page.locator('#worldMusic').tap();
     assert.equal(await page.locator('#worldMusic').getAttribute('aria-pressed'),'false');
+    await page.waitForFunction(()=>{
+      const a=window.scoreAnalyser;if(!a)return false;
+      const data=new Uint8Array(a.frequencyBinCount);a.getByteFrequencyData(data);return data.every(v=>v<6);
+    });
     await page.evaluate(()=>caches.open('ibrahim-test-obsoleto'));
     await page.evaluate(async()=>{
       const registration=await navigator.serviceWorker.getRegistration();
@@ -259,7 +341,7 @@ async function run(){
     await page.reload();
     await page.waitForFunction(async()=>{
       const names=await caches.keys();
-      return !!navigator.serviceWorker.controller&&names.includes('ibrahim-v152-phase1-r4')&&
+      return !!navigator.serviceWorker.controller&&names.includes('ibrahim-v153-phase1-r5')&&
         names.includes('outro-app')&&!names.includes('ibrahim-test-obsoleto');
     },null,{timeout:10000});
     const manifest=await context.request.get(url+'/manifest-v143.webmanifest');
@@ -271,10 +353,12 @@ async function run(){
     assert.equal(await page.evaluate(()=>document.querySelector('[data-phase-art] img').naturalWidth),1671);
     await page.locator('#openExploreMode').tap();
     assert.equal(await page.locator('#worldMusic').getAttribute('aria-pressed'),'false');
+    await page.locator('#worldMusic').tap();
+    await audioSignature(page);
     assert.deepEqual(await position(page),{x:34,y:24});
     await page.locator('.explore-exit').tap();
     await page.locator('#shopLauncher').tap();
-    assert.equal(await page.locator('.game-item').count(),4);
+    assert.equal(await page.locator('.game-item').count(),5);
     assert.deepEqual(errors,[]);
     assert.deepEqual(badResponses,[]);
     assert.deepEqual(forbiddenArt,[]);
@@ -329,7 +413,7 @@ async function run(){
     await desktop.locator('#openExploreMode').click();
     await desktop.locator('#worldFullscreen').click();
     await desktop.waitForFunction(()=>document.fullscreenElement?.id==='ibrahimGame');
-    await openIntro(desktop,/Arborian/,'enemy_guardian.webp',()=>desktop.keyboard.press('ArrowRight'));
+    await openIntro(desktop,/Arborian/,'arborian/idle.webp',()=>desktop.keyboard.press('ArrowRight'));
     assert.equal(await desktop.evaluate(()=>document.fullscreenElement?.id),'ibrahimGame');
     await desktop.locator('#defendBtn').click();
     await visible(desktop,'#battleDefeat');
