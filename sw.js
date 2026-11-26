@@ -1,5 +1,53 @@
-const CACHE_NAME='ibrahim-v151-phase1-dev';
-const CORE=['./assets/ogre-idle.webp','./assets/ogre-attack.webp','./assets/ogre-hurt.webp','./assets/ogre-defeated.webp','./','./index.html','./scripts/phase1-music.js','./assets/item-medicine.svg','./assets/item-cure.svg','./assets/item-net.svg','./assets/item-smoke.svg','./manifest-v143.webmanifest','./manifest.webmanifest','./forest_bg.jpg','./assets/launch-hero.jpg','./assets/phase1-faceoff.svg','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-192-maskable.png','./icons/icon-512-maskable.png','./icons/ibrahim-icon-192-v143.png','./icons/ibrahim-icon-512-v143.png','./icons/ibrahim-maskable-512-v143.png','./assets/companion_dog.png','./assets/ibrahim_idle.png','./assets/ibrahim_attack.png','./assets/ibrahim_defend.png','./assets/ibrahim_hurt.png','./assets/ibrahim_celebrate.png','./assets/ibrahim_victory.png','./assets/enemy_guardian.webp','./assets/enemy_guardian.svg','./assets/enemy_troll.svg','./assets/enemy_dragon.svg','./assets/enemy_shadow.svg','./assets/sfx_sword.wav','./assets/sfx_enemy.wav','./assets/sfx_shield.wav','./assets/sfx_skill.wav','./assets/sfx_win.wav'];
-self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then(async cache=>{await cache.addAll(CORE);const response=await fetch('./index.html',{cache:'no-store'});if(response.ok){const html=await response.text();const patched=html.replace('</head>','<style id="hide-battle-wallet-top-v1">#ibrahimGame .battle-wallet-top{display:none!important}</style></head>');await cache.put('./index.html',new Response(patched,{status:response.status,statusText:response.statusText,headers:response.headers}));}}).catch(()=>{}));});
-self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(key=>key.startsWith('ibrahim-')&&key!==CACHE_NAME).map(key=>caches.delete(key)));await self.clients.claim();})());});
-self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;const url=new URL(event.request.url);if(url.origin!==self.location.origin)return;if(event.request.mode==='navigate'||url.pathname.endsWith('/index.html')){event.respondWith(fetch(event.request,{cache:'no-store'}).then(async response=>{if(!response.ok)return response;const html=await response.text();const patched=html.replace('</head>','<style id="hide-battle-wallet-top-v1">#ibrahimGame .battle-wallet-top{display:none!important}</style></head>');const output=new Response(patched,{status:response.status,statusText:response.statusText,headers:response.headers});caches.open(CACHE_NAME).then(cache=>cache.put('./index.html',output.clone()));return output;}).catch(()=>caches.match('./index.html')));return;}event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy));}return response;})));});
+const CACHE_NAME = 'ibrahim-v152-phase1-r4';
+const CORE = [
+  './index.html', './manifest-v143.webmanifest', './manifest.webmanifest',
+  './scripts/phase1.css', './scripts/phase1-music.js', './scripts/phase1-sprites.js',
+  './scripts/phase1-terrain.js', './scripts/phase1-world.js', './forest_bg.jpg',
+  './assets/phase1-official.png', './assets/launch-hero.jpg',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-192-maskable.png',
+  './icons/icon-512-maskable.png', './icons/ibrahim-icon-192-v143.png',
+  './icons/ibrahim-icon-512-v143.png', './icons/ibrahim-maskable-512-v143.png',
+  './assets/item-medicine.svg', './assets/item-cure.svg', './assets/item-net.svg',
+  './assets/item-smoke.svg', './assets/companion_dog.png', './assets/ibrahim_idle.png',
+  './assets/ibrahim_attack.png', './assets/ibrahim_defend.png', './assets/ibrahim_hurt.png',
+  './assets/ibrahim_celebrate.png', './assets/ibrahim_victory.png',
+  './assets/enemy_guardian.webp', './assets/ogre-idle.webp', './assets/ogre-hurt.webp',
+  './assets/ogre-attack.webp', './assets/ogre-defeated.webp',
+  './assets/sfx_sword.wav', './assets/sfx_enemy.wav', './assets/sfx_shield.wav',
+  './assets/sfx_skill.wav', './assets/sfx_win.wav'
+];
+const entry = new URL('./index.html', self.registration.scope).href;
+
+self.addEventListener('install', event => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(CORE.map(path => new Request(path, {cache:'reload'})));
+    await self.skipWaiting();
+  })());
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k.startsWith('ibrahim-') && k !== CACHE_NAME).map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch', event => {
+  const {request} = event;
+  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    if (request.mode === 'navigate') {
+      try {
+        const response = await fetch(request, {cache:'no-cache'});
+        if (response.ok) return response;
+      } catch {
+        // An installed revision always has its own offline entry point.
+      }
+      return (await cache.match(request)) || (await cache.match(entry)) || Response.error();
+    }
+    return (await cache.match(request)) || fetch(request);
+  })());
+});

@@ -1,1 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><defs><radialGradient id="bg"><stop stop-color="#456354"/><stop offset="1" stop-color="#142b2b"/></radialGradient><linearGradient id="gold" x2="1" y2="1"><stop stop-color="#fff1b1"/><stop offset=".45" stop-color="#b98036"/><stop offset="1" stop-color="#69411d"/></linearGradient><linearGradient id="glass" x2="1" y2="1"><stop stop-color="#e4ffff" stop-opacity=".85"/><stop offset=".5" stop-color="#c7b18b"/><stop offset="1" stop-color="#153c37"/></linearGradient></defs><rect width="256" height="256" rx="24" fill="url(#bg)"/><rect x="8" y="8" width="240" height="240" rx="19" fill="none" stroke="url(#gold)" stroke-width="3"/><ellipse cx="128" cy="218" rx="76" ry="12" fill="#091b1a" opacity=".7"/><g transform="rotate(-24 128 128)"><path d="M114 112h19v108h-19z" fill="url(#gold)" stroke="#573c26" stroke-width="4"/><ellipse cx="124" cy="85" rx="67" ry="50" fill="#a4b7a0" fill-opacity=".22" stroke="url(#gold)" stroke-width="9"/><g stroke="#e6d2a2" stroke-width="2.5" fill="none"><path d="M64 70l90 57M73 48l110 70M100 37l88 55M62 96l88-57M80 120l100-65M111 134l77-49"/></g><path d="M112 153h24m-24 12h24m-24 12h24m-24 12h24" stroke="#533d2a" stroke-width="4"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140">
+ <defs>
+  <linearGradient id="wood"><stop stop-color="#57352e"/><stop offset=".4" stop-color="#bc7847"/><stop offset=".57" stop-color="#ddae66"/><stop offset="1" stop-color="#6b4535"/></linearGradient>
+  <linearGradient id="brass" x2="1" y2="1"><stop stop-color="#fff1a5"/><stop offset=".35" stop-color="#ad7847"/><stop offset=".61" stop-color="#eec67a"/><stop offset="1" stop-color="#654331"/></linearGradient>
+  <pattern id="mesh" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><path d="M0 0h9v9" fill="none" stroke="#e3d6a6" stroke-width="1.2"/><circle cx="0" cy="0" r="1.2" fill="#fff2c0"/></pattern>
+ </defs>
+ <ellipse cx="102" cy="120" rx="54" ry="8" fill="#071723" opacity=".65"/>
+ <g transform="rotate(41 101 72)">
+  <rect x="95" y="65" width="12" height="67" rx="5" fill="url(#wood)" stroke="#503733" stroke-width="2"/>
+  <path d="M95 113l12 4m-12 1l12 4m-12 1l11 4" stroke="#4e513c" stroke-width="3"/>
+  <path d="M66 35q-6 33 15 47 17 11 42-1 18-16 12-46z" fill="#0c2232" opacity=".65"/>
+  <path d="M66 35q-6 33 15 47 17 11 42-1 18-16 12-46z" fill="url(#mesh)" stroke="#c5a676" stroke-width="2"/>
+  <ellipse cx="101" cy="37" rx="36" ry="20" fill="#183643" fill-opacity=".46" stroke="#664332" stroke-width="10"/>
+  <ellipse cx="101" cy="36" rx="35" ry="19" fill="url(#mesh)" stroke="url(#brass)" stroke-width="6"/>
+  <ellipse cx="101" cy="35" rx="36" ry="20" fill="none" stroke="#f0dca5" stroke-width="1" opacity=".75"/>
+  <path d="M93 84h16l-2 14H95z" fill="url(#brass)" stroke="#674732"/>
+ </g>
+</svg>

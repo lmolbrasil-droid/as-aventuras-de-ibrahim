@@ -1,1 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><defs><radialGradient id="bg"><stop stop-color="#456354"/><stop offset="1" stop-color="#142b2b"/></radialGradient><linearGradient id="gold" x2="1" y2="1"><stop stop-color="#fff1b1"/><stop offset=".45" stop-color="#b98036"/><stop offset="1" stop-color="#69411d"/></linearGradient><linearGradient id="glass" x2="1" y2="1"><stop stop-color="#e4ffff" stop-opacity=".85"/><stop offset=".5" stop-color="#a69acc"/><stop offset="1" stop-color="#153c37"/></linearGradient></defs><rect width="256" height="256" rx="24" fill="url(#bg)"/><rect x="8" y="8" width="240" height="240" rx="19" fill="none" stroke="url(#gold)" stroke-width="3"/><ellipse cx="128" cy="218" rx="76" ry="12" fill="#091b1a" opacity=".7"/><path d="M143 92q30-35 9-53t-48 2q-14 15 5 27m56 15q42-7 36-35t-31-15" fill="none" stroke="#c3b6db" stroke-width="12" stroke-linecap="round" opacity=".65"/><circle cx="124" cy="153" r="60" fill="#293443" stroke="#aab0b5" stroke-width="4"/><path d="M77 125q20-27 47-25" stroke="#c0c5cb" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M107 87h35v22h-35z" fill="url(#gold)"/><path d="M126 87q0-22 24-23" fill="none" stroke="#c99b55" stroke-width="7"/><path d="M151 49v24m-12-12h24" stroke="#ffcf68" stroke-width="4"/><path d="M75 171q49 25 99 0" fill="none" stroke="#796e9b" stroke-width="8"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140">
+ <defs>
+  <radialGradient id="iron" cx=".31" cy=".26" r=".72"><stop stop-color="#a5a8a0"/><stop offset=".22" stop-color="#6b797c"/><stop offset=".57" stop-color="#364952"/><stop offset="1" stop-color="#152731"/></radialGradient>
+  <linearGradient id="metal"><stop stop-color="#70563c"/><stop offset=".35" stop-color="#e8ba72"/><stop offset=".62" stop-color="#a97647"/><stop offset="1" stop-color="#533d38"/></linearGradient>
+  <radialGradient id="spark"><stop stop-color="#fff3b2"/><stop offset=".2" stop-color="#f2b369" stop-opacity=".8"/><stop offset="1" stop-color="#f2a34b" stop-opacity="0"/></radialGradient>
+ </defs>
+ <ellipse cx="101" cy="123" rx="47" ry="9" fill="#081325" opacity=".7"/>
+ <path d="M89 51q-8-28 13-22 18 8 24-13" fill="none" stroke="#513a2d" stroke-width="7" stroke-linecap="round"/>
+ <path d="M89 51q-8-28 13-22 18 8 24-13" fill="none" stroke="#d8a45d" stroke-width="3" stroke-dasharray="2 2" stroke-linecap="round"/>
+ <circle cx="127" cy="15" r="21" fill="url(#spark)"/>
+ <path d="M127 5l1 8 8-3-7 6 7 3-8-1-4 7 1-8-7-3 8 1z" fill="#ffe7a1"/>
+ <rect x="80" y="43" width="29" height="14" rx="4" fill="url(#metal)" stroke="#6c5038"/>
+ <circle cx="99" cy="88" r="36" fill="url(#iron)" stroke="#172b36" stroke-width="2"/>
+ <path d="M65 77q31 19 69 8l1 7q-35 12-71-6z" fill="#172b36" opacity=".72"/>
+ <path d="M65 75q31 18 69 8l1 5q-35 12-71-6z" fill="url(#metal)"/>
+ <path d="M81 63q-10 7-11 14M108 111q14-5 21-17" fill="none" stroke="#ced8ce" stroke-width="2" stroke-linecap="round" opacity=".36"/>
+ <circle cx="100" cy="88" r="8" fill="url(#metal)" stroke="#292c2d"/>
+ <path d="M97 89q0-4 5-4t2 4q-3 2-2 4" fill="none" stroke="#604839" stroke-width="1.3"/>
+</svg>
