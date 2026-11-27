@@ -315,3 +315,103 @@ body.world-open { overflow: hidden; }
   #battleBagModal[data-mode="map"] .bag-item small { font-size: .72rem; }
   #battleBagModal[data-mode="map"] .bag-item strong { font-size: .83rem; }
 }
+
+/* Size the gap from the message's actual box, including wrapped text. */
+.map-controls { position:absolute; inset:auto 0 max(0px,env(safe-area-inset-bottom)) 0; display:grid;
+  gap:clamp(18px,3.5dvh,38px); pointer-events:none; }
+.map-control-row { display:flex; justify-content:space-between; align-items:end;
+  padding-inline:max(10px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right)); }
+#ibrahimExploreScreen .map-control-row .explore-pad, #ibrahimExploreScreen .map-control-row .map-bag {
+  position:static; pointer-events:auto;
+}
+#ibrahimExploreScreen .map-controls .explore-status { position:static; min-height:24px; }
+
+/* Shared proportions, with different enamel colors and iconography. */
+#ibrahimGame.in-encounter .battle-menu { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+#ibrahimGame.in-encounter .battle-menu button {
+  --enamel:#442a29;--light:#7e493f;--metal:#c79163;
+  margin:0; box-sizing:border-box; min-width:0; min-height:62px; padding:6px;
+  display:grid; grid-template-columns:26px minmax(0,1fr) 26px; align-items:center; gap:4px;
+  background:linear-gradient(155deg,var(--light),var(--enamel) 68%) !important;
+  color:#fff1d4 !important; border:1px solid var(--metal) !important;
+  border-radius:9px !important; outline:1px solid #f8d79970; outline-offset:-4px;
+  box-shadow:inset 0 1px #fff4cc45,inset 0 -4px #130e1b60,0 3px 4px #0a0f12a0 !important;
+  text-shadow:0 1px 2px #0f1718; text-align:center; font-size:clamp(.78rem,3.4vw,1rem);
+  transform:none; transition:filter .15s,transform .15s; animation:none;
+}
+#ibrahimGame.in-encounter #defendBtn { --enamel:#203a31;--light:#426a54;--metal:#aab58a; }
+#ibrahimGame.in-encounter #doubleBtn { --enamel:#352a4d;--light:#68517e;--metal:#bf9fc8; }
+#ibrahimGame.in-encounter #bagBtn { --enamel:#493223;--light:#86613a;--metal:#d6b175; }
+#ibrahimGame.in-encounter .battle-menu button:not(:disabled):active { transform:translateY(2px);filter:brightness(1.24); }
+#ibrahimGame.in-encounter .battle-menu button:disabled { opacity:.6; filter:saturate(.36);cursor:default; }
+#ibrahimGame.in-encounter .battle-menu button span { min-width:0; line-height:1.12; }
+#ibrahimGame.in-encounter .battle-menu button small { display:block;font-size:.64rem;margin-top:3px;color:#f7dfbb; }
+#ibrahimGame.in-encounter .battle-menu :is(svg,img) { width:28px;height:28px;justify-self:center;filter:drop-shadow(0 2px 2px #120b06a0); }
+@media(max-width:350px){ #ibrahimGame.in-encounter .battle-menu button {grid-template-columns:23px minmax(0,1fr) 23px;} }
+
+#ogreStrikeFx { position:absolute;inset:0;z-index:10;pointer-events:none; }
+#ogreStrikeFx::before,#ogreStrikeFx::after,#ogreStrikeFx i { position:absolute;content:"";opacity:0; }
+#battleScene[data-ogre-strike="prepare"] {transform-origin:77% 69%;animation:club-camera-in .7s both;}
+#battleScene[data-ogre-strike="prepare"] #gameMonster {animation:club-raise .7s cubic-bezier(.23,.6,.22,1) both!important;}
+#battleScene[data-ogre-strike="swing"] {transform-origin:77% 69%;animation:club-camera-swing .5s both;}
+#battleScene[data-ogre-strike="swing"] #gameMonster {animation:club-swing .5s cubic-bezier(.56,.08,.24,1) both!important;}
+#battleScene[data-ogre-strike="impact"] {transform-origin:77% 69%;animation:club-camera-hit .6s ease-out both;}
+#battleScene[data-ogre-strike="impact"] #gameMonster {animation:club-follow .6s ease-out both!important;}
+#battleScene[data-ogre-strike="return"] {transform-origin:77% 69%;animation:club-camera-out .7s ease-in-out both;}
+#battleScene[data-ogre-strike="return"] #gameMonster {animation:club-return .7s ease-in-out both!important;}
+#battleScene[data-ogre-strike="impact"] #gameHero {animation:club-player-recoil .6s ease-out both;}
+[data-ogre-strike="prepare"] #ogreStrikeFx::before {
+ inset:0;background:radial-gradient(ellipse at 74% 57%,transparent 19%,#23160fb0 85%);animation:forest-overlay-in .58s forwards;
+}
+[data-ogre-strike="swing"] #ogreStrikeFx::before {
+ inset:14% 10% 11% 20%;border-radius:50%;
+ background:conic-gradient(from 190deg,transparent 0 16%,#6b331b00 22%,#a66331b8 30%,#ffe4a0de 34%,transparent 44%);
+ filter:drop-shadow(0 0 9px #a95730);animation:club-arc .5s ease-out both;
+}
+[data-ogre-strike="impact"] #ogreStrikeFx::before {
+ inset:53% auto 6% 11%;width:43%;
+ background:radial-gradient(ellipse,#fff2be 0%,#c38554a0 37%,transparent 72%);
+ animation:club-dust .58s ease-out both;
+}
+[data-ogre-strike="impact"] #ogreStrikeFx i {
+ left:31%;top:72%;width:6px;height:4px;background:#e1b888;border-radius:50%;
+ animation:club-grit .6s ease-out both;
+}
+#ogreStrikeFx i:nth-child(1){--x:-76px;--y:-37px}
+#ogreStrikeFx i:nth-child(2){--x:-50px;--y:-56px}
+#ogreStrikeFx i:nth-child(3){--x:-18px;--y:-68px}
+#ogreStrikeFx i:nth-child(4){--x:18px;--y:-58px}
+#ogreStrikeFx i:nth-child(5){--x:41px;--y:-45px}
+#ogreStrikeFx i:nth-child(6){--x:64px;--y:-26px}
+@keyframes club-camera-in {to{transform:scale(1.1)}}
+@keyframes club-camera-swing {from{transform:scale(1.1)}to{transform:translateX(3%) scale(1.13)}}
+@keyframes club-camera-hit {0%,100%{transform:translateX(3%) scale(1.13)} 11%{transform:translate(1%,-1%) scale(1.14)} 27%{transform:translate(4%,1%) scale(1.13)}}
+@keyframes club-camera-out {from{transform:translateX(3%) scale(1.13)}to{transform:none}}
+@keyframes club-raise {from{transform:translateY(5%) rotate(-3deg) scale(.96)}to{transform:translate(4%,-7%) rotate(12deg) scale(1.04)}}
+@keyframes club-swing {0%{transform:translate(4%,-7%) rotate(12deg) scale(1.04)} 75%,100%{transform:translate(-61%,7%) rotate(-33deg) scale(1.07)}}
+@keyframes club-follow {from{transform:translate(-61%,7%) rotate(-33deg) scale(1.07)}to{transform:translate(-43%,4%) rotate(-19deg)}}
+@keyframes club-return {from{transform:translate(-43%,4%) rotate(-19deg)}to{transform:none}}
+@keyframes club-player-recoil {24%{transform:translate(-16%,2%) rotate(-8deg)}}
+@keyframes club-arc {from{opacity:0;transform:translate(23%,-16%) rotate(-27deg)} 51%,84%{opacity:1}to{opacity:.25;transform:translate(-28%,14%) rotate(28deg)}}
+@keyframes club-dust {from{opacity:.92;transform:scale(.49)}to{opacity:0;transform:scale(1.5,1.16)}}
+@keyframes club-grit {from{opacity:1}to{opacity:0;transform:translate(var(--x),var(--y)) rotate(112deg)}}
+
+.ogre-stars { position:absolute;inset:auto auto 59% 28%;display:none;width:40%;height:19%;pointer-events:none; }
+.ogre-fallen #gameMonster[data-boss="ogre"] { animation:club-collapse .6s ease-out both!important; }
+.ogre-fallen #gameMonster[data-boss="ogre"] img {animation:none!important;}
+.ogre-fallen .ogre-stars {display:block;animation:forest-overlay-in .45s .35s both;}
+.ogre-stars i { position:absolute;left:50%;top:45%;font-style:normal;color:#ffe49a;
+  filter:drop-shadow(0 0 5px #f0ac42);font-size:clamp(14px,3vw,27px);animation:club-stars 1.45s linear infinite; }
+.ogre-stars i:nth-child(2){animation-delay:-.48s}.ogre-stars i:nth-child(3){animation-delay:-.96s}
+@keyframes club-collapse {from{transform:translateY(-5%) rotate(7deg) scale(1.04)} 60%{transform:translateY(4%) rotate(-20deg) scale(.95,.81)}to{transform:translate(-9%,4%) rotate(-14deg) scale(.99,.85)}}
+@keyframes club-stars {0%{transform:translate(-42px,0) scale(.75)}25%{transform:translate(0,-9px) scale(.56)}50%{transform:translate(42px,0) scale(.75)}75%{transform:translate(0,10px) scale(1.05)}100%{transform:translate(-42px,0) scale(.75)}}
+.ogre-fallen #battleVictory { animation:forest-overlay-in .32s both; }
+
+.victory-team { position:relative;isolation:isolate;width:min(100%,305px);margin-inline:auto; }
+.victory-team::before { content:"";position:absolute;inset:8% 12% 0;z-index:-1;
+  background:radial-gradient(ellipse,#f8c96c55,transparent 67%); }
+.victory-team img { position:absolute;bottom:0;left:9%;width:66%;object-position:bottom center; }
+.victory-team img+img { left:52%;height:58%;width:36%;animation-delay:.075s; }
+@media(prefers-reduced-motion:reduce){
+  #battleScene[data-ogre-strike],#battleScene[data-ogre-strike] :is(#gameHero,#gameMonster),.ogre-fallen #gameMonster[data-boss="ogre"],.ogre-stars i {animation:none!important;}
+}

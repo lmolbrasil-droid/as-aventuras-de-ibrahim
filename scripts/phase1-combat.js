@@ -48,7 +48,51 @@
     story('Vitória! Ibrahim e seu fiel escudeiro ganharam 2 diamantes.');
     window.forestWorld.resolveBattle(b);
   }
-  async function enemyTurn(b){
+  function applyEnemyImpact(b,combat,damage){
+    combat.hp=Math.max(0,combat.hp-damage);
+    combat.guard=0;b.guardActive=false;b.pendingEnemy=false;delete b.counterDamage;
+    save();
+    hitNumber(damage,'hero');
+    refresh();
+  }
+  async function ogreTurn(b,combat,damage,guarded,recoverFromHit){
+    if(recoverFromHit){
+      scene.dataset.ogreStrike='regroup';
+      story('O Ogro recupera o equilíbrio.');
+      await wait(1200);
+    }
+    if(guarded)setHeroPose('defend',0);
+    story('O Ogro ergueu sua clava.');
+    scene.dataset.ogreStrike='prepare';
+    setEnemyPose('attack',0);
+    forestMusic.duck(2.5);
+    sound('ogre-growl');
+    await wait(700);
+
+    scene.dataset.ogreStrike='swing';
+    sound('ogre-swing');
+    await wait(500);
+
+    scene.dataset.ogreStrike='impact';
+    setHeroPose(guarded?'defend':'hurt',0);
+    effect.dataset.guard=guarded?'on':'';
+    sound(guarded?'ogre-parry':'ogre-crush');
+    applyEnemyImpact(b,combat,damage);
+    story(guarded?'O escudo bloqueou 60% do golpe. Ibrahim perdeu '+damage+' de vida.':'A clava atingiu Ibrahim. −'+damage+' de vida.');
+    await wait(600);
+
+    scene.dataset.ogreStrike='return';
+    await wait(700);
+    setEnemyPose('idle',0);
+    if(combat.hp&&!guarded)setHeroPose('idle',0);
+    scene.dataset.ogreStrike='settle';
+    effect.dataset.guard='';
+    await wait(800);
+    delete scene.dataset.ogreStrike;
+    if(!combat.hp)window.forestWorld.resolveBattle(b);
+  }
+
+  async function enemyTurn(b,recoverFromHit=false){
     const combat=data.game.combat;
     if(b.sleepTurns>0){
       b.sleepTurns--;
@@ -65,22 +109,19 @@
     b.counterDamage=raw;
     b.pendingEnemy=true;
     save();
-    scene.dataset.motion=boss?'arborian-windup':'ogre-windup';
+    const damage=Math.max(1,Math.round(raw*(guarded?.4:1)));
+    if(!boss){await ogreTurn(b,combat,damage,guarded,recoverFromHit);return;}
+    scene.dataset.motion='arborian-windup';
     if(guarded)setHeroPose('defend',0);
     setEnemyPose('attack',0);
-    cue(boss?'leaves':'ogre-charge');
-    story(boss?'Arborian reuniu a energia das raízes.':'O Ogro ergueu sua clava.');
+    cue('leaves');
+    story('Arborian reuniu a energia das raízes.');
     await wait(630);
-    const damage=Math.max(1,Math.round(raw*(guarded?.4:1)));
-    combat.hp=Math.max(0,combat.hp-damage);
-    combat.guard=0;b.guardActive=false;b.pendingEnemy=false;delete b.counterDamage;
-    save();
     setHeroPose(guarded?'defend':'hurt',830);
     effect.dataset.guard=guarded?'on':'';
-    cue(boss?'roots':'club');
+    cue('roots');
     if(guarded)sound('block');
-    hitNumber(damage,'hero');
-    refresh();
+    applyEnemyImpact(b,combat,damage);
     story(guarded?'O escudo bloqueou 60% do golpe. Ibrahim perdeu '+damage+' de vida.':'Ibrahim perdeu '+damage+' de vida.');
     await wait(860);
     setEnemyPose('idle',0);
@@ -95,6 +136,7 @@
     finally{
       scene.dataset.motion='';
       delete scene.dataset.normalStrike;
+      delete scene.dataset.ogreStrike;
       effect.dataset.cue='';effect.dataset.guard='';
       busy=false;
       refresh();
@@ -135,7 +177,7 @@
       if(!b.hp){finish(b);return;}
       b.pendingEnemy=true;
       save();
-      await enemyTurn(b);
+      await enemyTurn(b,true);
     });
   }
   function doubleAttack(){
@@ -162,7 +204,7 @@
       if(!b.hp){finish(b);return;}
       b.pendingEnemy=true;
       save();
-      await enemyTurn(b);
+      await enemyTurn(b,true);
     });
   }
   function defend(){

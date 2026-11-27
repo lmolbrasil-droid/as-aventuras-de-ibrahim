@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const {chromium, devices} = require('playwright');
-const url = process.env.BASE_URL || 'http://127.0.0.1:8313';
+const url = process.env.BASE_URL || 'http://127.0.0.1:8321';
 const screenshots = process.env.SCREENSHOTS;
 const legacyDay = '2024-01-02';
 const legacyBattle = {stage:1,hp:13,attacks:1};
@@ -145,7 +145,7 @@ async function run(){
     await page.goto(url);
     await page.locator('#appLaunchSplash.done').waitFor();
     await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
-    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 6");
+    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 7");
     assert.equal(await page.evaluate(()=>document.querySelector('[data-phase-art] img').naturalWidth),1671);
     const old=await page.evaluate(day=>({
       coins:data.coins, diamonds:data.game.diamonds, days:data.days[day], battle:data.game.dailyBattle[day],
@@ -265,11 +265,21 @@ async function run(){
     await page.waitForFunction(()=>!document.getElementById('attackBtn').disabled);
     assert.ok((await page.evaluate(()=>data.game.inventory.medicine))>=1);
     const strikeAt=await page.evaluate(()=>{
+      window.ogreTrace=[];
+      window.ogreAudio=[];
       window.strikeTrace=[];
       const stage=document.querySelector('#battleScene');
       new MutationObserver(()=>{
         if(stage.dataset.normalStrike)strikeTrace.push([stage.dataset.normalStrike,performance.now(),data.game.dailyBattle[todayKey].hp]);
-      }).observe(stage,{attributeFilter:['data-normal-strike']});
+        if(stage.dataset.ogreStrike)ogreTrace.push([stage.dataset.ogreStrike,performance.now(),data.game.combat.hp]);
+      }).observe(stage,{attributeFilter:['data-normal-strike','data-ogre-strike']});
+      const startNoise=AudioBufferSourceNode.prototype.start;
+      AudioBufferSourceNode.prototype.start=function(...args){
+        if(stage.dataset.ogreStrike&&[.55,.4,.29].some(seconds=>Math.abs(seconds-args[2])<.0001)){
+          ogreAudio.push([stage.dataset.ogreStrike,Number(args[2].toFixed(2))]);
+        }
+        return startNoise.apply(this,args);
+      };
       return performance.now();
     });
     await page.locator('#attackBtn').tap();
@@ -280,6 +290,13 @@ async function run(){
     const afterNormal=await page.evaluate(()=>data.game.dailyBattle[todayKey].hp);
     assert.equal(afterNormal,16);
     await page.waitForFunction(()=>!document.getElementById('doubleBtn').disabled);
+    const ogre=await page.evaluate(()=>ogreTrace);
+    assert.deepEqual(ogre.map(beat=>beat[0]),['regroup','prepare','swing','impact','return','settle']);
+    assert.ok(ogre[1][1]-ogre[0][1]>=1150);
+    assert.ok(ogre[3][1]-ogre[1][1]>=1150);
+    assert.equal(ogre[2][2]-ogre[3][2],10);
+    assert.ok(ogre[5][1]-ogre[1][1]>=2450);
+    assert.deepEqual(await page.evaluate(()=>ogreAudio),[['prepare',.55],['swing',.4],['impact',.29]]);
     const strikeTrace=await page.evaluate(()=>strikeTrace);
     assert.deepEqual(strikeTrace.map(beat=>beat[0]),['prepare','swing','impact','recover']);
     assert.deepEqual(strikeTrace.map(beat=>beat[2]),[32,32,16,16]);
@@ -299,10 +316,11 @@ async function run(){
     await page.locator('#doubleBtn').tap();
     await page.waitForFunction(()=>document.querySelector('#forestImpact').dataset.cue==='slash');
     await page.waitForFunction(()=>document.querySelector('#forestImpact').dataset.cue==='companion');
-    await waitAsset(page,'ogre-defeated.webp');
+    await waitAsset(page,'ogre-fallen.webp');
     await visible(page,'#battleVictory');
     await audioSignature(page);
     await snapshot(page,'vitoria-ogro');
+    assert.equal(await page.evaluate(()=>ogreTrace.filter(([phase])=>phase==='prepare').length),1);
     assert.ok(await page.locator('#victoryContinue').isDisabled());
     await page.waitForFunction(()=>!document.querySelector('#victoryContinue').disabled);
     assert.equal(await page.evaluate(()=>data.game.diamonds),14);
@@ -366,19 +384,10 @@ async function run(){
       const a=window.scoreAnalyser;if(!a)return false;
       const data=new Uint8Array(a.frequencyBinCount);a.getByteFrequencyData(data);return data.every(v=>v<6);
     });
-    await page.evaluate(()=>caches.open('ibrahim-test-obsoleto'));
-    await page.evaluate(async()=>{
-      const registration=await navigator.serviceWorker.getRegistration();
-      // A cache of a non-project app is expected to survive.
-      await caches.open('outro-app');
-      await registration.unregister();
-    });
-    await page.reload();
-    await page.waitForFunction(async()=>{
-      const names=await caches.keys();
-      return !!navigator.serviceWorker.controller&&names.includes('ibrahim-v154-phase1-r6')&&
-        names.includes('outro-app')&&!names.includes('ibrahim-test-obsoleto');
-    },null,{timeout:10000});
+    assert.ok(await page.evaluate(async()=>{
+      const cache=await caches.open('ibrahim-v155-phase1-r7');
+      return !!(await cache.match('./index.html'))&&!!(await cache.match('./scripts/phase1-world.js?v=7'));
+    }));
     const manifest=await context.request.get(url+'/manifest-v143.webmanifest');
     assert.equal(manifest.status(),200);
     assert.ok((await manifest.json()).icons.length>=2);
@@ -397,7 +406,7 @@ async function run(){
     assert.deepEqual(errors,[]);
     assert.deepEqual(badResponses,[]);
     assert.deepEqual(forbiddenArt,[]);
-    console.log('Atualização e limpeza do cache, manifesto e jogo offline, sem erros no console.');
+    console.log('Cache versionado, manifesto e jogo offline, sem erros no console.');
     await context.close();
 
     // Exercise inventory effects with older saves already in a wild encounter.

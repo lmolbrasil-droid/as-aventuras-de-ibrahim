@@ -13,7 +13,7 @@
   const terrain=forestTerrain;
   const directions={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
   const keys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
-  const stepLength=208;
+  const stepLength=278;
   let player,dog,step,held,queuedDirection,frameId,lastFrame=0,camera;
   let mode='',presentationTimer,resultTimer,treasureTimer,positionTimer;
   let viewWidth=0,viewHeight=0,ratio=1,pixelRatio=0,viewportDirty=true;
@@ -67,7 +67,7 @@
     const neighbor=[directions.left,directions.down,directions.right,directions.up]
       .map(([dx,dy])=>({x:player.x+dx,y:player.y+dy})).find(valid);
     dog={...(adjacent?previous:neighbor||player),dir:'down'};
-    player.gait=dog.gait=0;
+    player.travel=dog.travel=0;
     step=null;
     camera=null;
   }
@@ -119,8 +119,8 @@
     if(terrain.blocked(x,y)){player.dir=dir;return;}
     const dogFrom={...dog};
     step={start:time,from,dogFrom};
-    dog={x:player.x,y:player.y,dir:pickDirection(player.x-dog.x,player.y-dog.y),gait:1-dog.gait};
-    player={x,y,dir,gait:1-player.gait};
+    dog={x:player.x,y:player.y,dir:pickDirection(player.x-dog.x,player.y-dog.y),travel:dog.travel+Math.hypot(player.x-dog.x,player.y-dog.y)*terrain.tile};
+    player={x,y,dir,travel:player.travel+terrain.tile};
   }
 
   function arrive(){
@@ -179,7 +179,7 @@
     const zoom=Math.max(vw/850,vh/625, .8);
     const progress=step?clamp((time-step.start)/stepLength,0,1):1;
     const stops=!(held||queuedDirection);
-    const tween=stops&&progress>.78?1-(1-progress)**2/.22:progress;
+    const tween=stops&&progress>.76?1-(1-progress)**2/.24:progress;
     const position=(now,from)=>({
       x:(now.x+.5+(from?(from.x-now.x)*(1-tween):0))*terrain.tile,
       y:(now.y+.5+(from?(from.y-now.y)*(1-tween):0))*terrain.tile
@@ -191,23 +191,23 @@
     camera.x=clamp(camera.x+(target.x-camera.x)*(1-Math.exp(-dt/115)),0,maxX);
     camera.y=clamp(camera.y+(target.y-camera.y)*(1-Math.exp(-dt/115)),0,maxY);
     const view={...camera,right:camera.x+vw/zoom,bottom:camera.y+vh/zoom};
-    function pose(actor,from,offset){
-      if(!step)return {dir:actor.dir,frame:12};
-      // Keep the previous body orientation over the pivot and settle the
-      // last footfall when input is released.
-      const dir=progress<.14?from.dir:actor.dir;
-      if(stops&&progress>.78){
-        const end=progress>.91?1:0;
-        return {dir,frame:13+(1-actor.gait)*2+end};
-      }
-      return {dir,frame:((1-actor.gait)*6+Math.floor(progress*6)+offset)%12};
+    function pose(actor,from){
+      if(!from)return {dir:actor.dir,distance:actor.travel,weight:0};
+      const turn=from.dir!==actor.dir;
+      const fade=stops?Math.min(1,(1-progress)/.24):1;
+      const turnWeight=turn?clamp(Math.abs(progress-.11)/.17,0,1):1;
+      return {
+        dir:turn&&progress<.11?from.dir:actor.dir,
+        distance:from.travel+(actor.travel-from.travel)*tween,
+        weight:actor.travel===from.travel?0:fade*turnWeight
+      };
     }
-    const heroPose=pose(player,step?.from,0),dogPose=pose(dog,step?.dogFrom,2);
+    const heroPose=pose(player,step?.from),dogPose=pose(dog,step?.dogFrom);
     ctx.setTransform(zoom*ratio,0,0,zoom*ratio,-camera.x*zoom*ratio,-camera.y*zoom*ratio);
     terrain.draw(ctx,view,[
       ...forestLoot.actors(ctx,time,view),
-      {...d,draw:()=>forestSprites.draw(ctx,'dog',d.x,d.y,dogPose.dir,dogPose.frame)},
-      {...p,draw:()=>forestSprites.draw(ctx,'hero',p.x,p.y,heroPose.dir,heroPose.frame)}
+      {...d,draw:()=>forestSprites.draw(ctx,'dog',d.x,d.y,dogPose.dir,dogPose)},
+      {...p,draw:()=>forestSprites.draw(ctx,'hero',p.x,p.y,heroPose.dir,heroPose)}
     ],time);
     frameId=requestAnimationFrame(draw);
   }
@@ -268,22 +268,29 @@
   function resolveBattle(battle){
     clearTimeout(resultTimer);
     const firstCelebration=battle.won&&!Number.isFinite(battle.celebrateUntil);
+    const ogreWon=battle.won&&!state().boss;
     if(firstCelebration){
-      battle.celebrateUntil=Date.now()+5700;
+      const delay=ogreWon?3600:700;
+      battle.celebrateUntil=Date.now()+delay+5000;
+      if(ogreWon)battle.ogreFallUntil=Date.now()+delay;
       if(state().boss)state().arborianDefeated=true;
       save();
     }
+    const fallRemaining=Math.max(0,(battle.ogreFallUntil||0)-Date.now());
+    if(fallRemaining)root.classList.add('ogre-fallen');
+    const delay=battle.won?(ogreWon?fallRemaining:firstCelebration?700:0):520;
     resultTimer=setTimeout(()=>{
       if(mode!=='battle'||currentBattle()!==battle)return;
       if(battle.won)showBattleVictory(gameEnemy());
       else showDefeatScreen();
-    },battle.won?(firstCelebration?700:0):520);
+    },delay);
   }
   function returnToMap(){
     const saved=state();
     if(!saved.inEncounter)return;
     clearTimeout(presentationTimer);
     clearTimeout(resultTimer);
+    root.classList.remove("ogre-fallen");
     closeBattleVictory();
     closeBattleBag();
     document.getElementById('battleDefeat')?.remove();

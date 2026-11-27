@@ -25,3 +25,11 @@
 - Mantenha uma única cadeia de `requestAnimationFrame` no mapa. Agrupe gravações de deslocamento e grave coletas imediatamente com posição, inventário, saldo e identificação da recompensa. Preserve a pausa de entrada em mochila e tesouro.
 - Ao mudar a revisão, atualize o rótulo visível, a versão anunciada pelo worker, os parâmetros dos recursos e a chave de cache. Preserve `minhaAventuraKids_v1` e a identidade da PWA.
 - O servidor usado para o roteiro local é `python3 -m http.server 8313 --bind 127.0.0.1`. Rode `node scripts/test-phase1.cjs` e use `node scripts/benchmark-phase1.cjs URL` para medir a mesma rota em cada revisão.
+
+## Revisão 7
+
+- A Revisão 7 parte de `85a4f1b99e2743b4d8a4cf6723677d51f10eaa7c`. Preserve a capa, o terreno, os dois guardiões e as regras de jogo vigentes. A Fase 2 continua fora do escopo. Push, merge, deploy e serviços pagos exigem autorização expressa.
+- A caminhada agora usa articulações desenhadas em tempo real. Preserve a trilha por quadrículas e calcule a fase das pernas e patas pela distância percorrida. As texturas de corpo derivam das referências oficiais.
+- Preserve o Corte Relâmpago da Revisão 6. Depois de um golpe não fatal, o Ogro recupera por 1,2 s, dá seu golpe de 2,5 s e recompõe por 0,8 s. Sono, defesa, dano e recompensas mantêm as regras anteriores. A queda do Ogro antecede a vitória e só libera o anúncio após a permanência com estrelas.
+- A PWA mantém HTML e arquivos versionados no mesmo cache de release. Atualize os hashes SHA-384 se alterar arquivos de uma revisão. Preserve a identidade do manifesto e os dados do navegador. A promoção automática sem recarga existe apenas na migração da Revisão 6. Nas próximas revisões, sinalize a atualização e aguarde um momento seguro.
+- Para validar a Revisão 7, sirva a raiz em `127.0.0.1:8321` e rode `node scripts/test-phase1.cjs`. Use `node scripts/benchmark-phase1.cjs URL` para medir o canvas.

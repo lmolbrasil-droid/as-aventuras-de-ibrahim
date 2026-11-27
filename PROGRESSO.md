@@ -118,3 +118,32 @@ No Pixel 7 emulado, o canvas permaneceu em 756 × 1528 em ambos os modos. No per
 - A capa, Arborian, o guardião reservado, as três composições e o terreno da Fase 1 foram preservados. O terreno continua com os mesmos elementos e posições, com mudanças na renderização.
 - A causa exata da versão antiga no endereço habitual do Netlify ainda é indeterminada. A troca de versão foi validada localmente. A aparência, a fluidez e a mixagem ainda dependem da avaliação em Android físico.
 - Nenhum serviço pago ou crédito externo foi utilizado. A revisão está local até autorização expressa para envio e publicação de teste.
+
+# Revisão 7
+
+Base: `85a4f1b99e2743b4d8a4cf6723677d51f10eaa7c`, na branch `dev-fase1-musica-companheiro`.
+
+## Implementação
+
+- **Caminhada.** O mapa monta a pose em tempo real. O pé plantado compensa o deslocamento do personagem até a fase de balanço. Joelhos usam dois segmentos com comprimentos definidos, quadril e braços seguem a transferência de peso, e quatro patas funcionam com fases distintas. A orientação acompanha a trilha do personagem e a amplitude é reduzida ao virar ou parar. Cabeça, orelhas e cauda acompanham o movimento do cachorro. As camadas de tronco conservam as texturas e cores oficiais; as articulações são desenhadas pelo Canvas.
+- **Ritmo e golpe do Ogro.** O Corte Relâmpago mantém a sequência de 2,5 s. Em um golpe não fatal, o Ogro pausa 1,2 s antes da preparação. Depois executa preparação, arco da clava, impacto e retorno em 2,5 s, com câmera, rosnado, efeitos de movimento e batida no chão. A recomposição dura 0,8 s. A vida do jogador é atualizada no impacto. Os comandos ficam bloqueados até o fim. Sono e derrota suprimem o contra-ataque conforme as regras anteriores. O ataque de Arborian, a animação da Defesa e a sequência de Ataque Duplo foram preservados.
+- **Queda e vitória.** O Ogro cai, permanece cerca de três segundos com estrelas animadas e entra na comemoração com transição. O instante da transição é salvo para evitar recomeço inteiro após reabrir. Os dois personagens passam a dividir a composição da comemoração, com a imagem aprovada de Ibrahim preservada. Valores, prêmios e CONTINUAR permanecem.
+- **Controles.** Os botões de combate passam a usar ícones, bordas metálicas e quatro acabamentos de esmalte, com grade 2 × 2 uniforme. Os direcionais e a mochila no mapa ficam em uma linha responsiva acima da mensagem real, mantendo lados e área de toque.
+- **PWA.** O worker instala um conjunto completo, verifica a identificação do HTML e os hashes SHA-384 dos scripts, CSS e textura versionada, e serve a navegação do mesmo cache. O endereço de instalação e o manifesto permanecem estáveis. Na migração R6→R7, o worker novo pode assumir sem recarregar a aba, e os arquivos exatos da Revisão 6 continuam disponíveis para ela. Revisões posteriores ficam aguardando até o usuário atualizar na página inicial ou fechar as janelas. A versão visível passou a Revisão 7.
+
+## Testes e evidências
+
+- Chromium desktop e Pixel 7 emulado. Roteiro completo de caminhada, painel da mochila, colisões, compras, ataques, defesa, sono, cura, fuga, captura, vitória e derrota, além de recarga offline. O roteiro compara os estágios do golpe do Ogro, mede o intervalo e verifica que o dano e o áudio de impacto ocorrem simultaneamente. Uma execução adicional verificou as estrelas, o intervalo até a vitória, a ausência de revide após derrota e os diamantes uma única vez.
+- Os controles passaram com mensagens de uma e várias linhas em quatro perfis de viewport (320, 412, 689 e 910 px), antes e durante o fullscreen nativo. O modo de lançamento da PWA foi exercitado pela URL do manifesto.
+- Atualização R6→R7 na mesma origem de testes, com substituição real do worker. Um HTML R6 entregue como resposta para instalar R7 foi rejeitado. Com o HTML correto, o jogo aberto continuou na Revisão 6, arquivos antigos permaneceram íntegros, o aviso apareceu ao retornar à página inicial e a recarga offline abriu a Revisão 7. Os dados em localStorage e IndexedDB permaneceram inclusive após reabertura pela URL do manifesto.
+- Os quatro vídeos incluem caminhada nas quatro direções na Revisão 6 e na Revisão 7, turno inteiro contra o Ogro com áudio e queda até a vitória. As capturas registram os botões, os controles, a comemoração e a atualização.
+
+## Arquivos, limites e publicação
+
+- Interface, jogo e áudio: `index.html`, `scripts/phase1-combat.js`, `scripts/phase1-music.js`, `scripts/phase1-sprites.js`, `scripts/phase1-world.js` e `scripts/phase1.css`.
+- Arte nova: `assets/forest-rig.webp`, `assets/ogre-fallen.webp` e `assets/combat-commands.svg`. A capa, o terreno, a arte dos dois guardiões e os manifestos da Revisão 6 continuam idênticos.
+- Atualização e testes: `sw.js`, `scripts/test-phase1.cjs`, `AGENTS.md` e `PROGRESSO.md`.
+- Em Chromium com limitação de CPU 4×, o Pixel 7 emulado registrou p95 de 50,0 ms normal e 33,4 ms em tela cheia, com canvas de 756 × 1528 nos dois modos. O perfil grande registrou 66,6 e 50,1 ms, respectivamente. São amostras curtas e não reproduzem a GPU do Android.
+- O proxy retornou HTTP 403 para o endereço habitual e o endereço exclusivo da Revisão 6 no Netlify. A causa do atraso no endereço habitual não foi determinada. O endereço habitual e a URL exclusiva são origens diferentes e têm caches e armazenamento separados. A migração foi validada localmente na mesma origem, sem validação pós-deploy.
+- A naturalidade, a mixagem e a estabilidade no Android físico ainda dependem da avaliação do proprietário. O perfil emulado não reproduz a GPU ou o sistema de áudio do telefone.
+- O saldo de 484 créditos foi informado pelo proprietário. Nenhum serviço externo pago ou crédito foi utilizado nesta implementação. As mudanças permanecem locais, aguardando autorização expressa para envio e eventual deploy de teste.
