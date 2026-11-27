@@ -485,3 +485,52 @@ body.world-open { overflow: hidden; }
 .victory-award .victory-rewards span {display:flex;flex:1 1 0;min-width:0;flex-direction:column;align-items:center;justify-content:center;padding:2px 5px}
 .victory-award .victory-rewards span img {display:block;width:44px;height:34px;object-fit:contain}
 .victory-award .victory-rewards span b {font-size:1.15rem}
+
+/* Keep controls in reach while giving the staged action more room. */
+#ibrahimGame.world-active.in-encounter .battle-scene {
+  height:clamp(168px,52dvh,510px)!important;
+}
+#ibrahimGame.in-encounter #gameHero img {scale:1.48;}
+#ibrahimGame.in-encounter #gameCompanion img {scale:1.83;}
+#ibrahimGame.in-encounter .battle-menu button {font-size:clamp(1.08rem,4.6vw,1.36rem);}
+#ibrahimGame.in-encounter .battle-menu button span {overflow-wrap:normal;}
+@media(max-width:350px){
+  #ibrahimGame.in-encounter .battle-menu button {font-size:1.06rem;grid-template-columns:23px minmax(0,1fr) 23px;}
+}
+@media(max-height:670px){
+  #ibrahimGame.world-active.in-encounter .battle-scene {height:clamp(162px,43dvh,290px)!important;}
+}
+.victory-title {margin:0;}
+.victory-team img+img {left:42%;bottom:6%;}
+.boss-victory .battle-victory-card {
+  border:2px solid #f5cb73;
+  background:radial-gradient(ellipse at 50% 0%,#42573d 0%,#172f2a 44%,#131d21 100%);
+  box-shadow:0 0 25px #ffce6266,inset 0 0 0 5px #d0a24f30;
+  max-height:94dvh;overflow:auto;
+}
+.boss-victory .victory-title {font:900 clamp(1.45rem,7vw,2.45rem) Georgia,serif;color:#ffdf85;}
+.boss-victory .boss-chapter {color:#ffedbc;font:700 1.08rem Georgia,serif;margin:.35em 0;}
+.boss-victory .victory-award {
+  border-color:#e6bd6f;background:radial-gradient(ellipse at top,#c98a3b42,#20231c);
+}
+#ibrahimGame:is(.boss-fallen,.boss-reveal) #battleScene::after {
+  position:absolute;inset:0;z-index:7;pointer-events:none;content:"";
+  background:radial-gradient(circle at 73% 80%,#f5c86d4f,transparent 34%),
+    radial-gradient(circle at 72% 58%,#fff0bb 0 2px,transparent 3px),
+    radial-gradient(circle at 86% 46%,#ffe0a0 0 2px,transparent 3px),
+    radial-gradient(circle at 65% 71%,#ffdc86 0 1px,transparent 2px);
+  animation:arborian-embers 2s ease-in-out infinite alternate;
+}
+#ibrahimGame.boss-reveal #battleScene::after {
+  background:radial-gradient(ellipse at 68% 68%,#ffe09fba,transparent 76%),
+    radial-gradient(circle at 28% 36%,#fff5cf 0 2px,transparent 3px),
+    radial-gradient(circle at 75% 36%,#fff5cf 0 3px,transparent 4px),
+    radial-gradient(circle at 57% 68%,#ffdfa0 0 2px,transparent 3px);
+  animation:arborian-light 2s ease-in-out both;
+}
+@keyframes arborian-embers {from{opacity:.30}to{opacity:.83}}
+@keyframes arborian-light {0%{opacity:.25}55%{opacity:.88}100%{opacity:.55}}
+@media(prefers-reduced-motion:reduce){
+  #ibrahimGame:is(.boss-fallen,.boss-reveal) #battleScene::after {animation:none;opacity:.55;}
+  .boss-victory .victory-confetti {display:none;}
+}

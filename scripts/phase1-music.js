@@ -43,7 +43,7 @@ window.forestMusic = (() => {
     reed:{harmonics:[1,.31,.49,.14,.15],attack:.04,release:.11,vibrato:2.5},
     horn:{harmonics:[1,.54,.26,.2,.1,.06],attack:.095,release:.2,vibrato:1.2}
   };
-  let ctx, master, scoreBus, dry, reverb, noise, timer, track;
+  let ctx, master, scoreBus, dry, reverb, noise, timer, track, lightningBuffer;
   let lastVictory=false;
   let requested='',enabled=localStorage.getItem('ibrahimMusic')!=='off';
   const waves={};
@@ -57,6 +57,11 @@ window.forestMusic = (() => {
     const Audio=window.AudioContext||window.webkitAudioContext;
     if(!Audio||ctx)return;
     ctx=new Audio();
+    fetch('assets/corte-relampago-r9.wav')
+      .then(response=>{if(!response.ok)throw Error('Arquivo de áudio indisponível');return response.arrayBuffer();})
+      .then(bytes=>ctx.decodeAudioData(bytes))
+      .then(buffer=>{lightningBuffer=buffer;})
+      .catch(error=>console.warn('Corte Relâmpago:',error.message));
     master=ctx.createGain();master.gain.value=.7;
     scoreBus=ctx.createGain();scoreBus.connect(master);
     ctx.addEventListener('statechange',activate);
@@ -173,8 +178,9 @@ window.forestMusic = (() => {
     if(!mode)return;
     const dest=ctx.createGain(),score=scores[mode],t=ctx.currentTime;
     dest.gain.setValueAtTime(0,t);dest.gain.linearRampToValueAtTime(1,t+.42);dest.connect(scoreBus);
-    if(mode==='victory'){
-      lastVictory=true;playVictory(dest,t+.04);
+    if(mode==='victory'||mode==='boss-victory'){
+      if(mode==='victory'){lastVictory=true;playVictory(dest,t+.04);}
+      else playBossVictory(dest,t+.04);
       track={mode,dest,started:t};
       return;
     }
@@ -196,6 +202,30 @@ window.forestMusic = (() => {
       }
     }
     drum(dest,t,true,.2);drum(dest,t+3.03,true,.18);
+  }
+  function playBossVictory(dest,t){
+    const bars=[
+      {h:[50,57,65,69],m:[62,65,69,74]},
+      {h:[46,53,62,65],m:[77,76,74,70]},
+      {h:[43,55,62,70],m:[67,70,74,79]},
+      {h:[45,57,64,73],m:[76,74,73,69]},
+      {h:[50,57,66,74],m:[74,78,81,86]},
+      {h:[50,57,66,78],m:[86,81,78,74]}
+    ];
+    bars.forEach(({h,m},bar)=>{
+      const when=t+bar*1.9;
+      h.forEach((midi,i)=>{
+        voice(dest,midi,when+i*.04,bar===5?1.38:1.52,i===0?.13:.063,'string');
+        voice(dest,midi+12,when+.12+i*.17,.52,.058,'harp');
+      });
+      m.forEach((midi,i)=>{
+        const offset=[0,.38,.76,1.14][i];
+        const length=i===3?.64:.30;
+        voice(dest,midi,when+offset,length,.142,'horn');
+        if(bar>=2)voice(dest,midi+12,when+offset+.026,length*.78,.046,'flute');
+      });
+      if([0,2,4,5].includes(bar))drum(dest,when,true,.17);
+    });
   }
   function unlock(){
     try{
@@ -229,48 +259,21 @@ window.forestMusic = (() => {
   // Corte Relâmpago has its own amplitude and pitch envelopes. The sub
   // impact and upper resonances are separate so the strike stays clear at
   // low speaker volume without increasing the bus gain.
-  function lightningTone(t,shape){
-    const {from,to,duration,peak,attack,modulation=0}=shape;
-    const carrier=ctx.createOscillator(),amp=ctx.createGain();
-    carrier.frequency.setValueAtTime(from,t);
-    carrier.frequency.exponentialRampToValueAtTime(to,t+duration);
-    amp.gain.setValueAtTime(.0001,t);
-    amp.gain.exponentialRampToValueAtTime(peak,t+attack);
-    amp.gain.exponentialRampToValueAtTime(.0001,t+duration);
-    if(modulation){
-      const mod=ctx.createOscillator(),depth=ctx.createGain();
-      mod.frequency.setValueAtTime(from*1.48,t);
-      mod.frequency.exponentialRampToValueAtTime(to*1.48,t+duration);
-      depth.gain.setValueAtTime(modulation,t);
-      depth.gain.exponentialRampToValueAtTime(.1,t+duration);
-      mod.connect(depth);depth.connect(carrier.frequency);mod.start(t);mod.stop(t+duration);
-    }
-    carrier.connect(amp);amp.connect(master);
-    carrier.start(t);carrier.stop(t+duration);
-  }
   const lightning={
-    'normal-ready'(t){
-      lightningTone(t,{from:92,to:184,duration:.62,peak:.105,attack:.42,modulation:44});
-      lightningTone(t+.13,{from:180,to:363,duration:.52,peak:.065,attack:.32,modulation:26});
-      sweep(t+.30,.31,330,1350,.10);
-    },
-    'normal-swing'(t){
-      sweep(t,.22,530,2660,.20);
-      sweep(t+.055,.18,2310,940,.12);
-      lightningTone(t+.038,{from:618,to:239,duration:.22,peak:.091,attack:.028,modulation:83});
-    },
-    'normal-impact'(t){
-      lightningTone(t,{from:127,to:49,duration:.29,peak:.225,attack:.008});
-      sweep(t,.14,1890,580,.20);
-      lightningTone(t+.012,{from:466,to:292,duration:.24,peak:.092,attack:.012,modulation:76});
-      lightningTone(t+.027,{from:729,to:662,duration:.23,peak:.054,attack:.016,modulation:26});
-    },
-    'normal-recoil'(t){
-      sweep(t,.31,920,290,.077);
-      lightningTone(t+.06,{from:546,to:435,duration:.37,peak:.049,attack:.015,modulation:17});
-      lightningTone(t+.144,{from:812,to:583,duration:.33,peak:.027,attack:.017,modulation:14});
-    }
+    'normal-ready':[0,.70],
+    'normal-swing':[.75,.43],
+    'normal-impact':[1.25,.43],
+    'normal-recoil':[1.76,.72]
   };
+  function playLightning(name){
+    if(!lightningBuffer)return;
+    const source=ctx.createBufferSource(),gain=ctx.createGain();
+    source.buffer=lightningBuffer;
+    gain.gain.value=.68;
+    source.connect(gain);gain.connect(master);
+    const [offset,duration]=lightning[name];
+    source.start(ctx.currentTime+.008,offset,duration);
+  }
   const details={
     'bag-open':{sweep:[.23,430,870,.17],notes:[91,96,88],voice:'harp',gap:.055,delay:.09,volume:.056},
     'bag-close':{sweep:[.13,790,305,.10],notes:[81,88],voice:'harp',gap:.035,delay:.02,volume:.04},
@@ -298,7 +301,7 @@ window.forestMusic = (() => {
     effect(name){
       if(!ctx||ctx.state!=='running')return;
       if(name.startsWith('bag-')&&!enabled)return;
-      if(lightning[name]){lightning[name](ctx.currentTime+.008);return;}
+      if(lightning[name]){playLightning(name);return;}
       const detail=details[name];
       if(detail){
         const t=ctx.currentTime+.012;

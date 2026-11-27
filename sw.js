@@ -1,18 +1,18 @@
-const REVISION = 8;
-const CACHE_NAME = 'ibrahim-v156-phase1-r8';
+const REVISION = 9;
+const CACHE_NAME = 'ibrahim-v157-phase1-r9';
 const LEGACY_R6 = 'ibrahim-v154-phase1-r6';
 const CORE = [
-  './manifest-v143.webmanifest', './manifest.webmanifest',
-  './scripts/phase1.css?v=8', './scripts/phase1-music.js?v=8', './scripts/phase1-sprites.js?v=8',
-  './scripts/phase1-terrain.js?v=8', './scripts/phase1-world.js?v=8',
-  './scripts/phase1-combat.js?v=8', './scripts/phase1-loot.js?v=8', './forest_bg.jpg',
+  './progresso-local.html', './assets/corte-relampago-r9.wav', './manifest-v143.webmanifest', './manifest.webmanifest',
+  './scripts/phase1.css?v=9', './scripts/phase1-music.js?v=9', './scripts/phase1-sprites.js?v=9',
+  './scripts/phase1-terrain.js?v=9', './scripts/phase1-world.js?v=9',
+  './scripts/phase1-combat.js?v=9', './scripts/phase1-loot.js?v=9', './forest_bg.jpg',
   './assets/phase1-official.png', './assets/launch-hero.jpg',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-192-maskable.png',
   './icons/icon-512-maskable.png', './icons/ibrahim-icon-192-v143.png',
   './icons/ibrahim-icon-512-v143.png', './icons/ibrahim-maskable-512-v143.png',
   './assets/item-medicine.svg', './assets/item-cure.svg', './assets/item-net.svg',
   './assets/forest-treasure.svg', './assets/item-smoke.svg', './assets/item-sleep.svg', './assets/item-backpack.svg',
-  './assets/walk-ibrahim-r8-aprovado.webp?v=8', './assets/walk-dog-r8-aprovado.webp?v=8',
+  './assets/walk-ibrahim-r9.webp?v=9', './assets/walk-dog-r9.webp?v=9',
   './assets/dupla-rostos.webp', './assets/arena-ogro-r8.webp', './assets/arena-arborian-r8.webp', './assets/combat-commands.svg', './assets/ibrahim_ready.png', './assets/companion_dog.png', './assets/ibrahim_idle.png',
   './assets/ibrahim_attack.png', './assets/ibrahim_defend.png', './assets/ibrahim_hurt.png',
   './assets/ibrahim_celebrate.png', './assets/ibrahim_victory.png',
@@ -45,15 +45,15 @@ const CORE = [
   './assets/sfx_skill.wav', './assets/sfx_win.wav'
 ];
 const INTEGRITY = {
-  './scripts/phase1.css?v=8': 'sha384-RUFll5jiGi60n6HC27H1VWw0P00MYBMdc0xg+e/irZsl98aWFr8BPrS/9EbwcJOq',
-  './scripts/phase1-music.js?v=8': 'sha384-kEuw3GBJZMqUcYkECycpeqaXr94EvUgpIVOG7wL8aCukDTAWbtzFCZEd1pb/uW92',
-  './scripts/phase1-sprites.js?v=8': 'sha384-4B9plgS3IOXFSM0aEHa6MBW3TFNELe9HpU+AFgs62xkoChmTCqsY8PT0kMCdRzll',
-  './scripts/phase1-terrain.js?v=8': 'sha384-g4gJTOJRO2vdQqTf7W3drU4FfxsStmNYHjKuG4FTxDK4Rgpaa9H5R7h0jT9plW0k',
-  './scripts/phase1-world.js?v=8': 'sha384-qsqO37A9HbsNP/uvsYzFpIcSetAd54RLp4hb9XDzAOrnxeMYmxbRVLJdyZcq50IG',
-  './scripts/phase1-combat.js?v=8': 'sha384-SPHqGsDD3SxeG1MWDIQBEZ1FmcWLV/D89kaqmbty6ej7ksguQyM0eMeiRFWUlc6/',
-  './scripts/phase1-loot.js?v=8': 'sha384-AxfcSU7a0W6ZQ+Jcxg4SVdAJxICFRAoUmCEot9hv4/555YluoAFDhiIC0t+3TptW',
-  './assets/walk-ibrahim-r8-aprovado.webp?v=8': 'sha384-s2IImR8OP83nY0Qu1VyNUhkTA1GB1TCLt/rF25tDlXz18z1a600aMyChAP/AVmCQ',
-  './assets/walk-dog-r8-aprovado.webp?v=8': 'sha384-P/fTwG2T1tqI5sseXQXXzCOWlaruiKSzBum+3cWj20drR6IjKHrFG4J0cO3Z83mT',
+  './scripts/phase1.css?v=9': 'sha384-PFP9WNAHGMuBqMOUiPJLAT1g652SdkyPP9yFV9ZDhjFPwQ4iqSr4ZaIqT4Ri+VC3',
+  './scripts/phase1-music.js?v=9': 'sha384-c9w2/saQlei7BSl9BclNd2OPV67tpNxTQwiO1vMEesc61H8QSfeZhmUFYj6LKodQ',
+  './scripts/phase1-sprites.js?v=9': 'sha384-jxW6A99PfwW3uMSifQfNSdHqMGPOv0N70JQFOSibSGOR+crwnGyRLlmXgBijKZra',
+  './scripts/phase1-terrain.js?v=9': 'sha384-g4gJTOJRO2vdQqTf7W3drU4FfxsStmNYHjKuG4FTxDK4Rgpaa9H5R7h0jT9plW0k',
+  './scripts/phase1-world.js?v=9': 'sha384-qA+kHyQJw0q2AeXM2NjLa7mSMrVR+sTpKqME8/fp1Cy7ThCjTGrx8FXVu4FDbjCa',
+  './scripts/phase1-combat.js?v=9': 'sha384-SPHqGsDD3SxeG1MWDIQBEZ1FmcWLV/D89kaqmbty6ej7ksguQyM0eMeiRFWUlc6/',
+  './scripts/phase1-loot.js?v=9': 'sha384-AxfcSU7a0W6ZQ+Jcxg4SVdAJxICFRAoUmCEot9hv4/555YluoAFDhiIC0t+3TptW',
+  './assets/walk-ibrahim-r9.webp?v=9': 'sha384-dpraS49F+6pfh7Op0AHBRhZb/Ho6qvxYuzWXH6Bp0O9OYzzbX6GlSIfTb9gNXQ7K',
+  './assets/walk-dog-r9.webp?v=9': 'sha384-CgxuWQIw6wGvG+lZ7R76WwqJyi+N5n7KaochCKudt6VEo76Ib7wAG7kpcV/iEmNp',
 };
 const entry = new URL('./index.html', self.registration.scope).href;
 

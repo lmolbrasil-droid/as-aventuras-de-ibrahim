@@ -52,3 +52,10 @@
 - A caminhada usa `assets/walk-ibrahim-r8-aprovado.webp` e `assets/walk-dog-r8-aprovado.webp`. As linhas são costas, frente, esquerda e direita. Cada linha tem oito quadros de Ibrahim ou sete do cachorro, mais a última célula de repouso. Mantenha o plano de apoio comum e o avanço por distância.
 - Em combate, use as poses tratadas em `assets/poses-r8-aprovadas/`. Somente as cinco poses da prancha infantil do usuário são usadas para Arborian. Preserve a arte de vitória aprovada de Ibrahim, os recursos históricos e as regras e os efeitos do combate.
 - Ao receber novas pranchas, confira os recortes contra a fonte. Preserve a anatomia e a escala dentro de cada conjunto. Registre os quadros retidos por corte, halo ou sobreposição com outra pose. Mantenha o orçamento do canvas móvel e atualize o cache offline junto com a arte ativa.
+
+## Revisão 9
+
+- Use `076e503d22a1ea60237f33e7392de492fd01058f` como base da R9. Preserve o mapa, o layout de controles e os personagens da R8. Os atlas continuam usando quadros completos com apoio fixo, sem articulação em tempo real.
+- Mantenha as poses infantis de Arborian. Na vitória do chefe, grave o prazo da revelação e mantenha as recompensas nos campos de idempotência existentes. Preserve a derrota e a música dos inimigos comuns. O botão da vitória do chefe volta à trilha da Fase 1.
+- Preserve a identidade e o escopo da PWA. O backup entre origens deve ser local, explícito, validado e preservar uma cópia do progresso existente no destino. Confira a entrega pela rede e a revisão do worker no endereço habitual antes de alterar a política de atualização.
+- Push, merge, publicação, configuração de endereços externos e créditos pagos exigem autorização. A Fase 2 permanece fora do escopo.

@@ -268,20 +268,33 @@
   }
   function resolveBattle(battle){
     clearTimeout(resultTimer);
-    const firstCelebration=battle.won&&!Number.isFinite(battle.celebrateUntil);
-    const ogreWon=battle.won&&!state().boss;
-    if(firstCelebration){
-      const delay=ogreWon?3600:700;
-      battle.celebrateUntil=Date.now()+delay+5000;
-      if(ogreWon)battle.ogreFallUntil=Date.now()+delay;
-      if(state().boss)state().arborianDefeated=true;
+    const bossWon=battle.won&&state().boss;
+    const ogreWon=battle.won&&!bossWon;
+    if(bossWon&&!Number.isFinite(battle.bossRevealAt)){
+      battle.bossRevealAt=Date.now()+6000;
+      battle.celebrateUntil=battle.bossRevealAt+12000;
+      state().arborianDefeated=true;
+      save();
+    }else if(ogreWon&&!Number.isFinite(battle.celebrateUntil)){
+      battle.ogreFallUntil=Date.now()+3600;
+      battle.celebrateUntil=battle.ogreFallUntil+5000;
       save();
     }
     const fallRemaining=Math.max(0,(battle.ogreFallUntil||0)-Date.now());
-    if(fallRemaining)root.classList.add('ogre-fallen');
-    const delay=battle.won?(ogreWon?fallRemaining:firstCelebration?700:0):520;
+    if(ogreWon&&fallRemaining)root.classList.add('ogre-fallen');
+    const bossRemaining=bossWon?Math.max(0,battle.bossRevealAt-Date.now()):0;
+    root.classList.toggle('boss-fallen',bossRemaining>2000);
+    root.classList.toggle('boss-reveal',bossRemaining>0&&bossRemaining<=2000);
+    if(bossRemaining>2000){
+      resultTimer=setTimeout(()=>{
+        if(mode==='battle'&&currentBattle()===battle)resolveBattle(battle);
+      },bossRemaining-2000);
+      return;
+    }
+    const delay=bossWon?bossRemaining:ogreWon?fallRemaining:520;
     resultTimer=setTimeout(()=>{
       if(mode!=='battle'||currentBattle()!==battle)return;
+      root.classList.remove("boss-fallen","boss-reveal");
       if(battle.won)showBattleVictory(gameEnemy());
       else showDefeatScreen();
     },delay);
@@ -291,7 +304,7 @@
     if(!saved.inEncounter)return;
     clearTimeout(presentationTimer);
     clearTimeout(resultTimer);
-    root.classList.remove("ogre-fallen");
+    root.classList.remove("ogre-fallen","boss-fallen","boss-reveal");
     closeBattleVictory();
     closeBattleBag();
     document.getElementById('battleDefeat')?.remove();

@@ -132,7 +132,7 @@ async function run(){
       window.strikeAudio=[];
       AudioBufferSourceNode.prototype.start=function(...args){
         const phase=document.getElementById('battleScene')?.dataset.normalStrike;
-        if(phase&&[.32,.23,.19,.15].some(seconds=>Math.abs(seconds-args[2])<.0001))strikeAudio.push([phase,Number(args[2].toFixed(2))]);
+        if(phase&&this.buffer?.duration===3&&args[2])strikeAudio.push([phase,args[1],args[2]]);
         return startNoise.apply(this,args);
       };
       const random=Math.random;
@@ -145,7 +145,7 @@ async function run(){
     await page.goto(url);
     await page.locator('#appLaunchSplash.done').waitFor();
     await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
-    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 8");
+    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 9");
     assert.equal(await page.evaluate(()=>document.querySelector('[data-phase-art] img').naturalWidth),1671);
     const old=await page.evaluate(day=>({
       coins:data.coins, diamonds:data.game.diamonds, days:data.days[day], battle:data.game.dailyBattle[day],
@@ -302,7 +302,7 @@ async function run(){
     assert.deepEqual(strikeTrace.map(beat=>beat[2]),[32,32,16,16]);
     assert.ok(strikeTrace[2][1]-strikeTrace[0][1]>=1100);
     assert.ok(strikeTrace[3][1]-strikeAt>=1700);
-    assert.deepEqual(await page.evaluate(()=>strikeAudio),[['prepare',.32],['swing',.23],['swing',.19],['impact',.15],['impact',.32]]);
+    assert.deepEqual(await page.evaluate(()=>strikeAudio),[['prepare',0,.70],['swing',.75,.43],['impact',1.25,.43],['impact',1.76,.72]]);
     await page.locator('#bagBtn').tap();
     await page.getByRole('button',{name:'Usar Doce do Sono'}).tap();
     await page.waitForFunction(()=>data.game.dailyBattle[todayKey].sleepTurns===2&&!document.querySelector('#defendBtn').disabled);
@@ -367,7 +367,19 @@ async function run(){
     await snapshot(page,'defesa-arborian');
     await page.waitForFunction(()=>!document.querySelector('#doubleBtn').disabled);
     await page.locator('#doubleBtn').tap();
-    await visible(page,'#battleVictory');
+    await visible(page,'.boss-fallen');
+    const fall=Date.now();
+    await waitAsset(page,'poses-r8-aprovadas/arborian/defeated.webp');
+    assert.equal(await page.locator('#attackBtn').isDisabled(),true);
+    assert.equal(await page.locator('#battleVictory').count(),0);
+    await visible(page,'.boss-reveal');
+    const reveal=Date.now();
+    assert.ok(reveal-fall>=3500);
+    await visible(page,'#battleVictory.boss-victory');
+    assert.ok(Date.now()-reveal>=1650);
+    assert.equal(await page.locator('#battleVictory h2').textContent(),'FASE CONCLUÍDA!');
+    assert.equal(await page.locator('#battleVictory h3').textContent(),'RECOMPENSA ESPECIAL');
+    assert.ok(await page.locator('#victoryContinue').isDisabled());
     await page.locator('#openChestBtn').tap();
     assert.ok(await page.locator('#openChestBtn').isDisabled());
     assert.doesNotMatch(await page.locator('#chestResult').textContent(),/undefined/);
@@ -385,8 +397,8 @@ async function run(){
       const data=new Uint8Array(a.frequencyBinCount);a.getByteFrequencyData(data);return data.every(v=>v<6);
     });
     assert.ok(await page.evaluate(async()=>{
-      const cache=await caches.open('ibrahim-v156-phase1-r8');
-      return !!(await cache.match('./index.html'))&&!!(await cache.match('./scripts/phase1-world.js?v=8'));
+      const cache=await caches.open('ibrahim-v157-phase1-r9');
+      return !!(await cache.match('./index.html'))&&!!(await cache.match('./scripts/phase1-world.js?v=9'));
     }));
     const manifest=await context.request.get(url+'/manifest-v143.webmanifest');
     assert.equal(manifest.status(),200);
