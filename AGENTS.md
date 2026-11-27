@@ -68,3 +68,8 @@
 
 - A Rede de Captura fica retirada da loja, mochila, combate, recompensas e coletas. Preserve `inventory.rope` e registros legados em saves e backups. O inventário jogável continua com Remédio, Cura, Bomba de fumaça e Doce do Sono.
 - A reação ao impacto do Ogro deve terminar em postura estável antes de erguer a clava. Golpes fatais seguem a derrota existente sem iniciar contra-ataque.
+
+## Metodologia a partir da Revisão 11
+
+- Cada revisão contém apenas as pequenas correções explicitamente aprovadas para ela. Use como base o commit indicado e preserve as melhorias anteriores. Pendências e refinamentos fora desse escopo ficam para revisões autorizadas separadamente.
+- Registre o efeito de cada correção, rode os testes direcionados e a regressão pertinente e aguarde autorização expressa para publicar no ambiente de testes. Preserve a branch `main` e mantenha a Fase 2 fora do escopo.

@@ -145,7 +145,7 @@ async function run(){
     await page.goto(url);
     await page.locator('#appLaunchSplash.done').waitFor();
     await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
-    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 10");
+    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 11");
     assert.equal(await page.evaluate(()=>document.querySelector('[data-phase-art] img').naturalWidth),1671);
     const old=await page.evaluate(day=>({
       coins:data.coins, diamonds:data.game.diamonds, days:data.days[day], battle:data.game.dailyBattle[day],
@@ -397,8 +397,8 @@ async function run(){
       const data=new Uint8Array(a.frequencyBinCount);a.getByteFrequencyData(data);return data.every(v=>v<6);
     });
     assert.ok(await page.evaluate(async()=>{
-      const cache=await caches.open('ibrahim-v158-phase1-r10');
-      return !!(await cache.match('./index.html'))&&!!(await cache.match('./scripts/phase1-world.js?v=10'));
+      const cache=await caches.open('ibrahim-v159-phase1-r11');
+      return !!(await cache.match('./index.html'))&&!!(await cache.match('./scripts/phase1-world.js?v=11'));
     }));
     const manifest=await context.request.get(url+'/manifest-v143.webmanifest');
     assert.equal(manifest.status(),200);

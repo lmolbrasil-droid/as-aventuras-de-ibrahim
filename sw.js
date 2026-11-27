@@ -1,18 +1,18 @@
-const REVISION = 10;
-const CACHE_NAME = 'ibrahim-v158-phase1-r10';
+const REVISION = 11;
+const CACHE_NAME = 'ibrahim-v159-phase1-r11';
 const LEGACY_R6 = 'ibrahim-v154-phase1-r6';
 const CORE = [
   './progresso-local.html', './assets/corte-relampago-r9.wav', './manifest-v143.webmanifest', './manifest.webmanifest',
-  './scripts/phase1.css?v=10', './scripts/phase1-music.js?v=10', './scripts/phase1-sprites.js?v=10',
-  './scripts/phase1-terrain.js?v=10', './scripts/phase1-world.js?v=10',
-  './scripts/phase1-combat.js?v=10', './scripts/phase1-loot.js?v=10', './forest_bg.jpg',
+  './scripts/phase1.css?v=11', './scripts/phase1-music.js?v=11', './scripts/phase1-sprites.js?v=11',
+  './scripts/phase1-terrain.js?v=11', './scripts/phase1-world.js?v=11',
+  './scripts/phase1-combat.js?v=11', './scripts/phase1-loot.js?v=11', './forest_bg.jpg',
   './assets/phase1-official.png', './assets/launch-hero.jpg',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-192-maskable.png',
   './icons/icon-512-maskable.png', './icons/ibrahim-icon-192-v143.png',
   './icons/ibrahim-icon-512-v143.png', './icons/ibrahim-maskable-512-v143.png',
   './assets/item-medicine.svg', './assets/item-cure.svg',
   './assets/forest-treasure.svg', './assets/item-smoke.svg', './assets/item-sleep.svg', './assets/item-backpack.svg',
-  './assets/walk-ibrahim-r10.webp?v=10', './assets/walk-dog-r9.webp?v=10',
+  './assets/walk-ibrahim-r10.webp?v=11', './assets/walk-dog-r9.webp?v=11',
   './assets/dupla-rostos.webp', './assets/arena-ogro-r8.webp', './assets/arena-arborian-r8.webp', './assets/combat-commands.svg', './assets/ibrahim_ready.png', './assets/companion_dog.png', './assets/ibrahim_idle.png',
   './assets/ibrahim_attack.png', './assets/ibrahim_defend.png', './assets/ibrahim_hurt.png',
   './assets/ibrahim_celebrate.png', './assets/ibrahim_victory.png',
@@ -40,20 +40,20 @@ const CORE = [
   './assets/poses-r10-ibrahim/idle.webp',
   './assets/poses-r10-ibrahim/ready.webp',
   './assets/poses-r10-ibrahim/recover.webp',
-  './assets/poses-r10-ibrahim/victory.webp',
+  './assets/poses-r10-ibrahim/victory.webp', './assets/ibrahim-vitoria-dentes-r11.webp',
   './assets/sfx_sword.wav', './assets/sfx_enemy.wav', './assets/sfx_shield.wav',
   './assets/sfx_skill.wav', './assets/sfx_win.wav'
 ];
 const INTEGRITY = {
-  './scripts/phase1.css?v=10': 'sha384-XkHeqruj6Tir8nJq453YcVSQPDoHFVfCzRUz29/x/JwyUPHWhXOoR+4V+EGtZqYQ',
-  './scripts/phase1-music.js?v=10': 'sha384-w8cmsKNQyYc6UsZtbdLR9p6p3DDoTicdTg8mH4Xm8WYcWMg/TX3Ek3fj7vxC481J',
-  './scripts/phase1-sprites.js?v=10': 'sha384-SS8OSaEikYMTPXl+UdUSX9wLtPXAyU34Ctul4MoVthXqVFJNSrxpyjpdbHKnYX52',
-  './scripts/phase1-terrain.js?v=10': 'sha384-g4gJTOJRO2vdQqTf7W3drU4FfxsStmNYHjKuG4FTxDK4Rgpaa9H5R7h0jT9plW0k',
-  './scripts/phase1-world.js?v=10': 'sha384-k1Axq3UcU+TIPi1iXAVrdTNBWSX0QWeaanEWoocX52NgqQ92Pi/G/2jx6UPY0hiE',
-  './scripts/phase1-combat.js?v=10': 'sha384-X0IfNocNTE9g9KmaRze26MXLkO46nDr7aIKqSGiYcUhUjnLZ6UeGXgk5UbEXu3AC',
-  './scripts/phase1-loot.js?v=10': 'sha384-IMr8MIK6docj9PP5U3cYhCEjXsd0C18OK1bj/WG6afZOMKdZ07eSfgTeNij9M0R0',
-  './assets/walk-ibrahim-r10.webp?v=10': 'sha384-tG9f/AMGF2TOZPaSn8XL+ihlPCR8HCnCwP/bQvMtH4kCDuQXPt8z8W8dmJp8fBJG',
-  './assets/walk-dog-r9.webp?v=10': 'sha384-CgxuWQIw6wGvG+lZ7R76WwqJyi+N5n7KaochCKudt6VEo76Ib7wAG7kpcV/iEmNp',
+  './scripts/phase1.css?v=11': 'sha384-zWlvs10x7o7zZlwq2354ue3qS9hZ95Nlpa8pq6CNtWtlKh/8Sr/ROCvjnd5t0xDn',
+  './scripts/phase1-music.js?v=11': 'sha384-w8cmsKNQyYc6UsZtbdLR9p6p3DDoTicdTg8mH4Xm8WYcWMg/TX3Ek3fj7vxC481J',
+  './scripts/phase1-sprites.js?v=11': 'sha384-ioSz1nNEP6I112RvNFQz5Mf7HYK4lViDhvwb8kAUG9J6MO8U5UYs+3S3KZMqxyRt',
+  './scripts/phase1-terrain.js?v=11': 'sha384-g4gJTOJRO2vdQqTf7W3drU4FfxsStmNYHjKuG4FTxDK4Rgpaa9H5R7h0jT9plW0k',
+  './scripts/phase1-world.js?v=11': 'sha384-k1Axq3UcU+TIPi1iXAVrdTNBWSX0QWeaanEWoocX52NgqQ92Pi/G/2jx6UPY0hiE',
+  './scripts/phase1-combat.js?v=11': 'sha384-X0IfNocNTE9g9KmaRze26MXLkO46nDr7aIKqSGiYcUhUjnLZ6UeGXgk5UbEXu3AC',
+  './scripts/phase1-loot.js?v=11': 'sha384-IMr8MIK6docj9PP5U3cYhCEjXsd0C18OK1bj/WG6afZOMKdZ07eSfgTeNij9M0R0',
+  './assets/walk-ibrahim-r10.webp?v=11': 'sha384-tG9f/AMGF2TOZPaSn8XL+ihlPCR8HCnCwP/bQvMtH4kCDuQXPt8z8W8dmJp8fBJG',
+  './assets/walk-dog-r9.webp?v=11': 'sha384-CgxuWQIw6wGvG+lZ7R76WwqJyi+N5n7KaochCKudt6VEo76Ib7wAG7kpcV/iEmNp',
 };
 const entry = new URL('./index.html', self.registration.scope).href;
 

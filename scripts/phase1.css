@@ -547,3 +547,7 @@ body.world-open { overflow: hidden; }
 #ibrahimGame.boss-encounter [data-normal-strike="impact"] #normalStrikeFx::before {right:24%;top:31%;}
 #ibrahimGame.boss-encounter [data-normal-strike="impact"] #normalStrikeFx i {right:35%;}
 #ibrahimGame.boss-encounter #forestImpact:is([data-cue="slash"],[data-cue="companion"])::before {right:22%;}
+
+#ibrahimGame.in-encounter .battle-menu .command-name {font-size:1.3em;}
+.battle-victory-overlay:not(.boss-victory) .victory-team img {animation:none;}
+#ibrahimGame.in-encounter #doubleBtn .command-name {display:block;line-height:.93;}
