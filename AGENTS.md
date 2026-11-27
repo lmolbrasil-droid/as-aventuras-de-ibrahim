@@ -33,3 +33,22 @@
 - Preserve o Corte Relâmpago da Revisão 6. Depois de um golpe não fatal, o Ogro recupera por 1,2 s, dá seu golpe de 2,5 s e recompõe por 0,8 s. Sono, defesa, dano e recompensas mantêm as regras anteriores. A queda do Ogro antecede a vitória e só libera o anúncio após a permanência com estrelas.
 - A PWA mantém HTML e arquivos versionados no mesmo cache de release. Atualize os hashes SHA-384 se alterar arquivos de uma revisão. Preserve a identidade do manifesto e os dados do navegador. A promoção automática sem recarga existe apenas na migração da Revisão 6. Nas próximas revisões, sinalize a atualização e aguarde um momento seguro.
 - Para validar a Revisão 7, sirva a raiz em `127.0.0.1:8321` e rode `node scripts/test-phase1.cjs`. Use `node scripts/benchmark-phase1.cjs URL` para medir o canvas.
+
+## Revisão 8
+
+- Use `7966d409a68e4019070a22d777e821172d964473` como referência para comparar as mudanças da Revisão 8. Mantenha o trabalho local até autorização expressa para envio e publicação.
+- No mapa, use quadros completos com referência à capa oficial. A Revisão 8 usa provisoriamente os atlas da Revisão 6. Antes de integrar a arte definitiva, apresente folha completa e vídeos e valide anatomia, proporções, contato com o chão e identidade nas quatro direções.
+- As poses de combate em uso ficam em `assets/ogre-r8/` e `assets/arborian-r8/`. Preserve também as poses anteriores, a capa e o guardião reservado. Preserve os tempos e regras de combate.
+- Ao investigar a PWA, compare o endereço habitual com a URL exclusiva. Registre HTML e worker pela rede, worker ativo, contexto e escopo antes de atribuir a causa. Use `diagnostico-atualizacao.html` quando disponível e preserve a instalação e o progresso. Qualquer alteração de endereço ou configuração do Netlify exige aprovação.
+
+### Complemento da Revisão 8
+
+- Use o Blender local para produzir folhas de poses completas de Ibrahim e do cachorro. Compare a frente, as costas e os dois perfis com a capa. Aguarde aprovação visual antes de produzir ciclos completos ou integrar novos sprites.
+- Para avaliar desempenho, compare as origens locais da R7, da R8 anterior e da R8 otimizada com `scripts/benchmark-phase1.cjs URL_R7 URL_R8_ANTES URL_R8_DEPOIS`. Faça as medições sem renderização do Blender em paralelo. Registre duração, percurso, perfil, CPU, DPR, superfície do canvas e intervalos entre quadros.
+- A identificação continua Revisão 8. Por se tratar da mesma entrega ainda local, ajuste somente os hashes dos arquivos versionados que forem alterados. Mudanças no mecanismo de atualização ou na configuração do Netlify dependem de evidência ou autorização, conforme o caso.
+
+### Sprites aprovados da Revisão 8
+
+- A caminhada usa `assets/walk-ibrahim-r8-aprovado.webp` e `assets/walk-dog-r8-aprovado.webp`. As linhas são costas, frente, esquerda e direita. Cada linha tem oito quadros de Ibrahim ou sete do cachorro, mais a última célula de repouso. Mantenha o plano de apoio comum e o avanço por distância.
+- Em combate, use as poses tratadas em `assets/poses-r8-aprovadas/`. Somente as cinco poses da prancha infantil do usuário são usadas para Arborian. Preserve a arte de vitória aprovada de Ibrahim, os recursos históricos e as regras e os efeitos do combate.
+- Ao receber novas pranchas, confira os recortes contra a fonte. Preserve a anatomia e a escala dentro de cada conjunto. Registre os quadros retidos por corte, halo ou sobreposição com outra pose. Mantenha o orçamento do canvas móvel e atualize o cache offline junto com a arte ativa.

@@ -17,6 +17,8 @@
   let player,dog,step,held,queuedDirection,frameId,lastFrame=0,camera;
   let mode='',presentationTimer,resultTimer,treasureTimer,positionTimer;
   let viewWidth=0,viewHeight=0,ratio=1,pixelRatio=0,viewportDirty=true;
+  const compactDisplay=matchMedia("(pointer: coarse) and (max-width: 850px)");
+  compactDisplay.addEventListener("change",()=>{viewportDirty=true;});
   new ResizeObserver(()=>{viewportDirty=true;}).observe(canvas);
   const paused=()=>!bag.hidden||!treasure.hidden;
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -166,9 +168,8 @@
       viewWidth=canvas.clientWidth;
       viewHeight=canvas.clientHeight;
       pixelRatio=devicePixelRatio;
-      // Keep retina density on phone-sized views. Cap large backing surfaces,
-      // whose fill cost increases quadratically with device pixel ratio.
-      const surfaceBudget=2000000;
+      // Bound raster work on touch phones while keeping the CSS size and camera fixed.
+      const surfaceBudget=compactDisplay.matches?825000:2000000;
       ratio=Math.min(pixelRatio||1,2,Math.sqrt(surfaceBudget/Math.max(1,viewWidth*viewHeight)));
       const width=Math.max(1,Math.round(viewWidth*ratio)),height=Math.max(1,Math.round(viewHeight*ratio));
       if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}

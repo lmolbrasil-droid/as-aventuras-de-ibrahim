@@ -132,7 +132,7 @@ async function run(){
       window.strikeAudio=[];
       AudioBufferSourceNode.prototype.start=function(...args){
         const phase=document.getElementById('battleScene')?.dataset.normalStrike;
-        if(phase&&[.44,.4,.22,.24].some(seconds=>Math.abs(seconds-args[2])<.0001))strikeAudio.push([phase,Number(args[2].toFixed(2))]);
+        if(phase&&[.32,.23,.19,.15].some(seconds=>Math.abs(seconds-args[2])<.0001))strikeAudio.push([phase,Number(args[2].toFixed(2))]);
         return startNoise.apply(this,args);
       };
       const random=Math.random;
@@ -145,7 +145,7 @@ async function run(){
     await page.goto(url);
     await page.locator('#appLaunchSplash.done').waitFor();
     await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
-    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 7");
+    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 8");
     assert.equal(await page.evaluate(()=>document.querySelector('[data-phase-art] img').naturalWidth),1671);
     const old=await page.evaluate(day=>({
       coins:data.coins, diamonds:data.game.diamonds, days:data.days[day], battle:data.game.dailyBattle[day],
@@ -200,14 +200,14 @@ async function run(){
       const c=document.createElement('canvas');c.width=100;c.height=100;
       const ctx=c.getContext('2d');
       return ['hero','dog'].map(name=>['up','down','left','right'].map(dir=>{
-        const frames=Array.from({length:12},(_,i)=>{
-          ctx.clearRect(0,0,100,100);forestSprites.draw(ctx,name,50,75,dir,i);
+        const frames=Array.from({length:name==="hero"?8:7},(_,i)=>{
+          ctx.clearRect(0,0,100,100);forestSprites.draw(ctx,name,50,75,dir,{distance:i*80/(name==="hero"?8:7)+.5,weight:1});
           return c.toDataURL();
         });
         return new Set(frames).size;
       }));
     });
-    assert.ok(atlas.flat().every(n=>n>=10));
+    assert.ok(atlas.every((dirs,index)=>dirs.every(n=>n===(index?7:8))));
     const obstacle=await page.evaluate(()=>{
       const start=data.game.exploration.player;
       const directions=[['ArrowUp',0,-1],['ArrowLeft',-1,0],['ArrowDown',0,1],['ArrowRight',1,0]];
@@ -249,14 +249,14 @@ async function run(){
 
     await page.evaluate(()=>{window.dice=0;});
     const randomRoute=route(page,'grass');
-    await openIntro(page,/Ogro/, 'ogre-idle.webp',()=>randomRoute);
+    await openIntro(page,/Ogro/, 'ogre-r8/idle.webp',()=>randomRoute);
     const ogreAudio=await audioSignature(page);
     assert.notDeepEqual(mapAudio,ogreAudio);
     const encounter=await position(page);
     await visible(page,'#worldMusic');
     await snapshot(page,'combate-ogro');
     await page.locator('#defendBtn').tap();
-    await waitAsset(page,'ogre-attack.webp');
+    await waitAsset(page,'ogre-r8/attack.webp');
     await page.waitForFunction(()=>!document.getElementById('attackBtn').disabled);
     assert.equal(await page.evaluate(()=>data.game.combat.hp),116);
     await page.locator('#bagBtn').tap();
@@ -285,7 +285,7 @@ async function run(){
     await page.locator('#attackBtn').tap();
     assert.ok(await page.locator('#doubleBtn').isDisabled());
     await page.evaluate(()=>attackGuardian()); // An attempted duplicate while locked.
-    await waitAsset(page,'ogre-hurt.webp');
+    await waitAsset(page,'ogre-r8/hurt.webp');
     await snapshot(page,'impacto-ogro');
     const afterNormal=await page.evaluate(()=>data.game.dailyBattle[todayKey].hp);
     assert.equal(afterNormal,16);
@@ -302,7 +302,7 @@ async function run(){
     assert.deepEqual(strikeTrace.map(beat=>beat[2]),[32,32,16,16]);
     assert.ok(strikeTrace[2][1]-strikeTrace[0][1]>=1100);
     assert.ok(strikeTrace[3][1]-strikeAt>=1700);
-    assert.deepEqual(await page.evaluate(()=>strikeAudio),[['prepare',.44],['swing',.4],['impact',.22],['impact',.24]]);
+    assert.deepEqual(await page.evaluate(()=>strikeAudio),[['prepare',.32],['swing',.23],['swing',.19],['impact',.15],['impact',.32]]);
     await page.locator('#bagBtn').tap();
     await page.getByRole('button',{name:'Usar Doce do Sono'}).tap();
     await page.waitForFunction(()=>data.game.dailyBattle[todayKey].sleepTurns===2&&!document.querySelector('#defendBtn').disabled);
@@ -316,7 +316,7 @@ async function run(){
     await page.locator('#doubleBtn').tap();
     await page.waitForFunction(()=>document.querySelector('#forestImpact').dataset.cue==='slash');
     await page.waitForFunction(()=>document.querySelector('#forestImpact').dataset.cue==='companion');
-    await waitAsset(page,'ogre-fallen.webp');
+    await waitAsset(page,'ogre-r8/fallen.webp');
     await visible(page,'#battleVictory');
     await audioSignature(page);
     await snapshot(page,'vitoria-ogro');
@@ -340,13 +340,13 @@ async function run(){
     await snapshot(page,'ponte');
     await route(page,{x:33,y:24});
     await snapshot(page,'clareira-arborian');
-    await openIntro(page,/Arborian/, 'arborian/idle.webp',()=>page.keyboard.press('ArrowRight'));
+    await openIntro(page,/Arborian/, 'poses-r8-aprovadas/arborian/idle.webp',()=>page.keyboard.press('ArrowRight'));
     const bossAudio=await audioSignature(page);
     assert.notDeepEqual(bossAudio,mapAudio);
     assert.notDeepEqual(bossAudio,ogreAudio);
     await snapshot(page,'combate-arborian');
     await page.locator('#attackBtn').tap();
-    await waitAsset(page,'arborian/hurt.webp');
+    await waitAsset(page,'poses-r8-aprovadas/arborian/hurt.webp');
     await snapshot(page,'impacto-arborian');
     await page.waitForFunction(()=>!document.querySelector('#defendBtn').disabled);
     assert.ok(await page.evaluate(()=>data.game.dailyBattle[todayKey].hp<40));
@@ -362,7 +362,7 @@ async function run(){
     }
     assert.equal(await page.evaluate(()=>data.game.combat.hp),bossHP);
     await page.locator('#defendBtn').tap();
-    await waitAsset(page,'arborian/attack.webp');
+    await waitAsset(page,'poses-r8-aprovadas/arborian/attack.webp');
     await page.waitForFunction(()=>document.querySelector('#forestImpact').dataset.guard==='on');
     await snapshot(page,'defesa-arborian');
     await page.waitForFunction(()=>!document.querySelector('#doubleBtn').disabled);
@@ -385,8 +385,8 @@ async function run(){
       const data=new Uint8Array(a.frequencyBinCount);a.getByteFrequencyData(data);return data.every(v=>v<6);
     });
     assert.ok(await page.evaluate(async()=>{
-      const cache=await caches.open('ibrahim-v155-phase1-r7');
-      return !!(await cache.match('./index.html'))&&!!(await cache.match('./scripts/phase1-world.js?v=7'));
+      const cache=await caches.open('ibrahim-v156-phase1-r8');
+      return !!(await cache.match('./index.html'))&&!!(await cache.match('./scripts/phase1-world.js?v=8'));
     }));
     const manifest=await context.request.get(url+'/manifest-v143.webmanifest');
     assert.equal(manifest.status(),200);
@@ -423,7 +423,7 @@ async function run(){
       },{saveKey,legacyDay,legacyBattle});
       const itemPage=await itemContext.newPage();
       await itemPage.goto(url);
-      await waitAsset(itemPage,'ogre-idle.webp');
+      await waitAsset(itemPage,'ogre-r8/idle.webp');
       await itemPage.locator('#bagBtn').click();
       const item=itemPage.locator('.bag-item').filter({hasText:effect});
       await item.getByRole('button').click();
@@ -457,7 +457,7 @@ async function run(){
     await desktop.locator('#openExploreMode').click();
     await desktop.locator('#worldFullscreen').click();
     await desktop.waitForFunction(()=>document.fullscreenElement?.id==='ibrahimGame');
-    await openIntro(desktop,/Arborian/,'arborian/idle.webp',()=>desktop.keyboard.press('ArrowRight'));
+    await openIntro(desktop,/Arborian/,'poses-r8-aprovadas/arborian/idle.webp',()=>desktop.keyboard.press('ArrowRight'));
     assert.equal(await desktop.evaluate(()=>document.fullscreenElement?.id),'ibrahimGame');
     await desktop.locator('#defendBtn').click();
     await visible(desktop,'#battleDefeat');

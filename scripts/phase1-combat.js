@@ -135,6 +135,7 @@
     try{await action(b);}
     finally{
       scene.dataset.motion='';
+      delete scene.dataset.companionPose;
       delete scene.dataset.normalStrike;
       delete scene.dataset.ogreStrike;
       effect.dataset.cue='';effect.dataset.guard='';
@@ -189,14 +190,19 @@
       if(data.game.exploration.boss)setEnemyPose('defend',0);
       for(const [index,damage] of [first,total-first].entries()){
         scene.dataset.motion=index?'companion-windup':'hero-windup';
-        if(!index)setHeroPose('ready',0);
+        setHeroPose(index?'idle':'ready',0);
         await wait(index?410:460);
         scene.dataset.motion=index?'companion-strike':'hero-strike';
         setHeroPose(index?'idle':'attack',0);
         setEnemyPose('hurt',0);
         cue(index?'companion':'slash');
         b.hp=Math.max(0,b.hp-damage);hitNumber(damage,'enemy');refresh();
-        await wait(index?680:610);
+        if(index){
+          await wait(340);
+          scene.dataset.companionPose='recover';
+          renderTeamSprites(b);
+          await wait(340);
+        }else await wait(610);
       }
       b.doubleUsed=true;
       b.attacks=(b.attacks||0)+1;

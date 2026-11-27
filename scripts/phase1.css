@@ -63,11 +63,7 @@ body.world-open { overflow: hidden; }
 #ibrahimGame.world-active.in-encounter .battle-scene {
   height: clamp(170px, 44dvh, 450px) !important;
   border: 1px solid #e6d19f80; box-shadow: 0 9px 24px #06191275;
-  background-image: linear-gradient(#122b19a8,#172a1652 45%,#1028209e),url("../forest_bg.jpg") !important;
-  background-position: center 59%; background-size: cover;
-}
-#ibrahimGame.boss-encounter .battle-scene {
-  background-image: radial-gradient(ellipse at 65% 32%,#d8b45651,transparent 55%),linear-gradient(#2c2415b5,#202f23a6),url("../forest_bg.jpg") !important;
+  background-position: center; background-size: cover;
 }
 .world-active .scene-caption { color: #fff2ca; background: #1a3129d4; }
 .world-active .enemy-stage img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
@@ -415,3 +411,77 @@ body.world-open { overflow: hidden; }
 @media(prefers-reduced-motion:reduce){
   #battleScene[data-ogre-strike],#battleScene[data-ogre-strike] :is(#gameHero,#gameMonster),.ogre-fallen #gameMonster[data-boss="ogre"],.ogre-stars i {animation:none!important;}
 }
+
+/* Combat presentation. Keep the existing command colors and action keyframes. */
+#ibrahimGame.world-active.in-encounter .battle-scene.region-forest {
+  --battle-floor:clamp(19px,9%,37px);
+  background-image:linear-gradient(180deg,#16291e12,transparent 43%,#160f0c35),url("../assets/arena-ogro-r8.webp") !important;
+  background-position:center center!important;
+}
+#ibrahimGame.world-active.in-encounter.boss-encounter .battle-scene.region-forest {
+  background-image:linear-gradient(180deg,#10252405,transparent 46%,#05151040),url("../assets/arena-arborian-r8.webp") !important;
+}
+#ibrahimGame.in-encounter .battle-scene .scene-ground { display:none; }
+#ibrahimGame.in-encounter .battle-team { bottom:var(--battle-floor); }
+#ibrahimGame.in-encounter #gameHero {
+  left:13%!important; width:71%!important; height:100%!important; bottom:-6px!important;
+}
+#ibrahimGame.in-encounter #gameCompanion {
+  left:1%!important; width:33%!important; height:54%!important; bottom:0!important;
+}
+#ibrahimGame.in-encounter #gameMonster {
+  bottom:calc(var(--battle-floor) + 4px)!important; height:min(80%,240px)!important; width:46%!important; right:3%!important;
+}
+#ibrahimGame.boss-encounter #gameMonster {
+  height:min(88%,305px)!important; width:55%!important; right:1.6%!important;
+}
+#ibrahimGame.in-encounter .battle-scene #gameMonster img,
+#ibrahimGame.in-encounter .battle-scene #gameHero img,
+#ibrahimGame.in-encounter .battle-scene #gameCompanion img {
+  filter:drop-shadow(0 3px 2px #1615126b); animation:none; transform-origin:50% 94%;
+}
+/* The supplied poses carry more transparent padding than the previous art. */
+#ibrahimGame.in-encounter #gameHero img { scale:1.30; transform-origin:50% 100%; }
+#ibrahimGame.in-encounter #gameCompanion img { scale:1.65; transform-origin:50% 100%; }
+#ibrahimGame.boss-encounter #gameMonster img { scale:1.13; transform-origin:50% 100%; }
+#ibrahimGame.in-encounter .battle-scene:not([data-normal-strike]):not([data-ogre-strike]):is(:not([data-motion]),[data-motion=""]) #gameHero,
+#ibrahimGame.in-encounter .battle-scene:not([data-normal-strike]):not([data-ogre-strike]):is(:not([data-motion]),[data-motion=""]) #gameCompanion,
+#ibrahimGame.in-encounter .battle-scene #gameMonster:not([class*="enemy-pose-"]) {
+  animation:none;
+}
+#ibrahimGame.in-encounter :is(#gameHero,#gameCompanion,#gameMonster) { isolation:isolate; overflow:visible; }
+#ibrahimGame.in-encounter :is(#gameHero,#gameCompanion,#gameMonster)::before {
+  content:""; position:absolute; z-index:-1; width:53%; height:11px; bottom:-5px; left:23%;
+  border-radius:50%; background:radial-gradient(ellipse,#14140ab5,#100e0970 43%,transparent 74%);
+  transform:skewX(-17deg); pointer-events:none;
+}
+#ibrahimGame.in-encounter #gameHero::before { bottom:0; width:52%; left:23%; }
+#ibrahimGame.in-encounter #gameCompanion::before { width:65%; left:18%; }
+#ibrahimGame.boss-encounter #gameMonster::before { width:87%; left:6%; }
+#ibrahimGame.in-encounter .battle-menu button {
+  grid-template-columns:clamp(26px,8vw,37px) minmax(0,1fr) clamp(26px,8vw,37px);
+  gap:0; padding-inline:5px; font-size:clamp(1rem,4.1vw,1.18rem);
+}
+#ibrahimGame.in-encounter .battle-menu button span { line-height:1.05; }
+#ibrahimGame.in-encounter .battle-menu button small { font-size:clamp(.62rem,2.7vw,.73rem); }
+#ibrahimGame.in-encounter .battle-menu :is(svg,img) { width:clamp(24px,7.4vw,32px);height:clamp(24px,7.4vw,32px); }
+#ibrahimGame.in-encounter .battle-menu img.dupla-portrait { width:clamp(29px,9vw,39px);height:34px;object-fit:contain; }
+@media(max-width:350px){
+  #ibrahimGame.in-encounter .battle-menu button { grid-template-columns:24px minmax(0,1fr) 24px; min-height:62px; }
+  #ibrahimGame.in-encounter .battle-menu img.dupla-portrait { width:26px; }
+}
+
+.victory-team { width:min(100%,260px); height:min(28dvh,184px); }
+.victory-team img { left:0%;width:75%; }
+.victory-team img+img { left:47%;bottom:3%;height:54%;width:37%;scale:1.54;transform-origin:50% 95%;animation-delay:.045s; }
+.victory-award {
+  margin:0 0 9px;padding:8px 9px 7px;border:1px solid #ca9c628a;border-radius:13px;
+  background:radial-gradient(ellipse at 50% 0,#e2b06a27,transparent 69%),#14162275;
+}
+.victory-award h3 {display:flex;align-items:center;justify-content:center;gap:6px;margin:0 0 4px;
+  text-align:center;color:#ffdc88;font:700 clamp(.73rem,3.3vw,1rem) Georgia,serif;letter-spacing:.035em}
+.victory-award h3::before,.victory-award h3::after {content:"✧";color:#d4a762;font-size:.76rem}
+.victory-award .victory-rewards {display:flex;justify-content:center;gap:8px;margin:0}
+.victory-award .victory-rewards span {display:flex;flex:1 1 0;min-width:0;flex-direction:column;align-items:center;justify-content:center;padding:2px 5px}
+.victory-award .victory-rewards span img {display:block;width:44px;height:34px;object-fit:contain}
+.victory-award .victory-rewards span b {font-size:1.15rem}

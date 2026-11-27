@@ -41,7 +41,7 @@ const forestTerrain = (() => {
   const paper=document.createElement('canvas');
   paper.width=width;
   paper.height=height;
-  const ctx=paper.getContext('2d');
+  const ctx=paper.getContext('2d',{alpha:false});
   const X=x=>(x+.5)*tile;
   function ellipse(c,x,y,rx,ry,fill){
     c.fillStyle=fill;
@@ -179,6 +179,7 @@ const forestTerrain = (() => {
   const canopyRows=Array.from({length:rows},()=>[]);
   for(const tree of canopies)canopyRows[Math.floor(tree.y/tile)].push(tree);
   for(const {art,left,top} of canopies)ctx.drawImage(art,left,top);
+  const fireflies=Array.from({length:24},(_,i)=>({x:rng(i,3,1)*width,y:rng(i,3,2)*height}));
   function draw(c,view,actors,time){
     const cropX=Math.floor(view.x),cropY=Math.floor(view.y);
     const cropWidth=Math.min(width,Math.ceil(view.right))-cropX;
@@ -210,7 +211,7 @@ const forestTerrain = (() => {
       if(clipped)c.restore();
     }
     for(let i=0;i<24;i++){
-      const x=rng(i,3,1)*width+Math.sin(time*.001+i)*15,y=rng(i,3,2)*height+Math.cos(time*.002+i)*9;
+      const x=fireflies[i].x+Math.sin(time*.001+i)*15,y=fireflies[i].y+Math.cos(time*.002+i)*9;
       if(x<view.x||x>view.right||y<view.y||y>view.bottom)continue;
       ellipse(c,x,y,4,4,'#e8ed7b25');ellipse(c,x,y,1.3,1.3,'#f8f2bbaa');
     }
