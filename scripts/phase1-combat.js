@@ -58,8 +58,9 @@
   async function ogreTurn(b,combat,damage,guarded,recoverFromHit){
     if(recoverFromHit){
       scene.dataset.ogreStrike='regroup';
+      setEnemyPose('idle',0);
       story('O Ogro recupera o equilíbrio.');
-      await wait(1200);
+      await wait(500);
     }
     if(guarded)setHeroPose('defend',0);
     story('O Ogro ergueu sua clava.');
@@ -67,7 +68,7 @@
     setEnemyPose('attack',0);
     forestMusic.duck(2.5);
     sound('ogre-growl');
-    await wait(700);
+    await wait(500);
 
     scene.dataset.ogreStrike='swing';
     sound('ogre-swing');
@@ -169,7 +170,9 @@
       refresh();
       await wait(155);
       sound('normal-recoil');
-      await wait(445);
+      await wait(345);
+      if(b.hp&&!data.game.exploration.boss)setEnemyPose('idle',0);
+      await wait(100);
 
       scene.dataset.normalStrike='recover';
       setHeroPose('idle',0);
@@ -259,7 +262,7 @@
       copy.append(name,desc);
       const use=document.createElement('button');
       use.type='button';use.textContent='Usar';use.setAttribute('aria-label','Usar '+item.name);
-      const unavailable=map&&!isHeal(item.id)||item.id==='rope'&&!map&&data.game.exploration.boss
+      const unavailable=map&&!isHeal(item.id)
         ||item.id===sleepId&&b?.sleepTurns>0||isHeal(item.id)&&combat.hp>=combat.maxHp;
       use.disabled=!quantity||unavailable;
       use.addEventListener('click',()=>useItem(item,mode));
@@ -283,7 +286,7 @@
       return;
     }
     return run(async b=>{
-      if(id===sleepId&&b.sleepTurns>0||id==='rope'&&data.game.exploration.boss)return;
+      if(id===sleepId&&b.sleepTurns>0)return;
       closeBattleBag();
       story('Ibrahim usou '+item.name+'.');
       cue(id);
@@ -295,11 +298,7 @@
         story('O inimigo adormeceu por duas rodadas.');
         return;
       }
-      if(id==='rope'){
-        const enemy=gameEnemy(),companion={id:'companion-'+Date.now(),name:enemy[0],emoji:enemy[1]};
-        data.game.capturedCompanions.push(companion);data.game.equipped.pet=companion.id;
-      }
-      if(id==='rope'||id==='smoke'){
+      if(id==='smoke'){
         b.escaped=true;
         save();
         window.returnFromIbrahimEncounter();

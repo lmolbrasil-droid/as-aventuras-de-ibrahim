@@ -145,7 +145,7 @@ async function run(){
     await page.goto(url);
     await page.locator('#appLaunchSplash.done').waitFor();
     await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
-    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 9");
+    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 10");
     assert.equal(await page.evaluate(()=>document.querySelector('[data-phase-art] img').naturalWidth),1671);
     const old=await page.evaluate(day=>({
       coins:data.coins, diamonds:data.game.diamonds, days:data.days[day], battle:data.game.dailyBattle[day],
@@ -159,9 +159,9 @@ async function run(){
     await page.locator('#shopLauncher').tap();
     await visible(page,'#shopView');
     assert.deepEqual(await page.locator('.game-item strong').allTextContents(),
-      ['Remédio','Cura','Rede de captura','Bomba de fumaça','Doce do Sono']);
+      ['Remédio','Cura','Bomba de fumaça','Doce do Sono']);
     assert.deepEqual(await page.locator('.game-item img').evaluateAll(imgs=>imgs.map(i=>i.naturalWidth>0)),
-      [true,true,true,true,true]);
+      [true,true,true,true]);
     await snapshot(page,'loja');
     await page.locator('.game-item').first().getByRole('button').tap();
     assert.deepEqual(await page.evaluate(()=>[data.coins,data.game.inventory.medicine]),[77,3]);
@@ -171,7 +171,7 @@ async function run(){
     await page.locator('#openExploreMode').tap();
     await visible(page,'#ibrahimExploreCanvas');
     const mapAudio=await audioSignature(page);
-    console.log('Loja com cinco itens, compra de Remédio e Doce do Sono, e sinal de áudio no mapa.');
+    console.log('Loja com quatro itens, compra de Remédio e Doce do Sono, e sinal de áudio no mapa.');
     await snapshot(page,'exploracao');
     await page.evaluate(()=>scoreAnalyser.context.suspend());
     await page.locator('#mapBagBtn').tap();
@@ -292,10 +292,10 @@ async function run(){
     await page.waitForFunction(()=>!document.getElementById('doubleBtn').disabled);
     const ogre=await page.evaluate(()=>ogreTrace);
     assert.deepEqual(ogre.map(beat=>beat[0]),['regroup','prepare','swing','impact','return','settle']);
-    assert.ok(ogre[1][1]-ogre[0][1]>=1150);
-    assert.ok(ogre[3][1]-ogre[1][1]>=1150);
+    assert.ok(ogre[1][1]-ogre[0][1]>=470);
+    assert.ok(ogre[3][1]-ogre[1][1]>=950);
     assert.equal(ogre[2][2]-ogre[3][2],10);
-    assert.ok(ogre[5][1]-ogre[1][1]>=2450);
+    assert.ok(ogre[5][1]-ogre[1][1]>=2250);
     assert.deepEqual(await page.evaluate(()=>ogreAudio),[['prepare',.55],['swing',.4],['impact',.29]]);
     const strikeTrace=await page.evaluate(()=>strikeTrace);
     assert.deepEqual(strikeTrace.map(beat=>beat[0]),['prepare','swing','impact','recover']);
@@ -397,8 +397,8 @@ async function run(){
       const data=new Uint8Array(a.frequencyBinCount);a.getByteFrequencyData(data);return data.every(v=>v<6);
     });
     assert.ok(await page.evaluate(async()=>{
-      const cache=await caches.open('ibrahim-v157-phase1-r9');
-      return !!(await cache.match('./index.html'))&&!!(await cache.match('./scripts/phase1-world.js?v=9'));
+      const cache=await caches.open('ibrahim-v158-phase1-r10');
+      return !!(await cache.match('./index.html'))&&!!(await cache.match('./scripts/phase1-world.js?v=10'));
     }));
     const manifest=await context.request.get(url+'/manifest-v143.webmanifest');
     assert.equal(manifest.status(),200);
@@ -414,7 +414,7 @@ async function run(){
     assert.deepEqual(await position(page),{x:34,y:24});
     await page.locator('.explore-exit').tap();
     await page.locator('#shopLauncher').tap();
-    assert.equal(await page.locator('.game-item').count(),5);
+    assert.equal(await page.locator('.game-item').count(),4);
     assert.deepEqual(errors,[]);
     assert.deepEqual(badResponses,[]);
     assert.deepEqual(forbiddenArt,[]);
@@ -422,7 +422,7 @@ async function run(){
     await context.close();
 
     // Exercise inventory effects with older saves already in a wild encounter.
-    for(const effect of ['Cura','Rede de captura','Bomba de fumaça']){
+    for(const effect of ['Cura','Bomba de fumaça']){
       const itemContext=await browser.newContext();
       await itemContext.addInitScript(({saveKey,legacyDay,legacyBattle})=>{
         if(localStorage.getItem(saveKey))return;
@@ -437,6 +437,8 @@ async function run(){
       await itemPage.goto(url);
       await waitAsset(itemPage,'ogre-r8/idle.webp');
       await itemPage.locator('#bagBtn').click();
+      assert.equal(await itemPage.getByRole('button',{name:'Usar Rede de captura'}).count(),0);
+      assert.equal(await itemPage.evaluate(()=>forestLoot.drops.some(drop=>drop.id==='river-net')),false);
       const item=itemPage.locator('.bag-item').filter({hasText:effect});
       await item.getByRole('button').click();
       if(effect==='Cura'){
@@ -447,17 +449,12 @@ async function run(){
       }else{
         await visible(itemPage,'#ibrahimExploreCanvas');
         assert.deepEqual(await position(itemPage),{x:6,y:8});
-        if(effect==='Rede de captura'){
-          assert.equal(await itemPage.evaluate(()=>data.game.inventory.rope),0);
-          assert.equal(await itemPage.evaluate(()=>data.game.capturedCompanions[0].name),'Ogro da Floresta');
-          assert.equal(await itemPage.evaluate(()=>gamePower()),15);
-        }else{
-          assert.equal(await itemPage.evaluate(()=>data.game.inventory.smoke),0);
-        }
+        assert.equal(await itemPage.evaluate(()=>data.game.inventory.smoke),0);
       }
+      assert.equal(await itemPage.evaluate(()=>JSON.parse(localStorage.getItem(KEY)).game.inventory.rope),1);
       await itemContext.close();
     }
-    console.log('Retomada de encontros de outro dia, Cura, Rede de captura e Bomba de fumaça.');
+    console.log('Retomada de encontros antigos, Cura, Bomba de fumaça e preservação da rede em inventário legado.');
 
     const desktop=await browser.newPage();
     await desktop.addInitScript(({saveKey})=>{

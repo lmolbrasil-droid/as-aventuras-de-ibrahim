@@ -168,7 +168,6 @@ body.world-open { overflow: hidden; }
 @keyframes brace-r5 { 100% { transform: translateX(-9%) rotate(-8deg) scale(.94); } }
 @keyframes strike-r5 { 0% { transform: translateX(-9%); } 35% { transform: translateX(23%) rotate(5deg); } }
 @keyframes ogre-r5 { 33% { transform: scale(1.12) rotate(9deg); } 58% { transform: translateX(-27%) rotate(-12deg); } }
-@keyframes arborian-r5 { 37% { transform: translateY(-12%) scale(1.07); filter: drop-shadow(0 0 18px #c2f575); } 66% { transform: translateX(-7%) translateY(-4%); } }
 @media (prefers-reduced-motion: reduce) {
   #battleScene[data-motion] :is(#gameHero,#gameCompanion,#gameMonster), .victory-team img { animation-duration: .01s !important; }
 }
@@ -347,8 +346,8 @@ body.world-open { overflow: hidden; }
 
 #ogreStrikeFx { position:absolute;inset:0;z-index:10;pointer-events:none; }
 #ogreStrikeFx::before,#ogreStrikeFx::after,#ogreStrikeFx i { position:absolute;content:"";opacity:0; }
-#battleScene[data-ogre-strike="prepare"] {transform-origin:77% 69%;animation:club-camera-in .7s both;}
-#battleScene[data-ogre-strike="prepare"] #gameMonster {animation:club-raise .7s cubic-bezier(.23,.6,.22,1) both!important;}
+#battleScene[data-ogre-strike="prepare"] {transform-origin:77% 69%;animation:club-camera-in .5s both;}
+#battleScene[data-ogre-strike="prepare"] #gameMonster {animation:club-raise .5s cubic-bezier(.23,.6,.22,1) both!important;}
 #battleScene[data-ogre-strike="swing"] {transform-origin:77% 69%;animation:club-camera-swing .5s both;}
 #battleScene[data-ogre-strike="swing"] #gameMonster {animation:club-swing .5s cubic-bezier(.56,.08,.24,1) both!important;}
 #battleScene[data-ogre-strike="impact"] {transform-origin:77% 69%;animation:club-camera-hit .6s ease-out both;}
@@ -383,7 +382,9 @@ body.world-open { overflow: hidden; }
 @keyframes club-camera-swing {from{transform:scale(1.1)}to{transform:translateX(3%) scale(1.13)}}
 @keyframes club-camera-hit {0%,100%{transform:translateX(3%) scale(1.13)} 11%{transform:translate(1%,-1%) scale(1.14)} 27%{transform:translate(4%,1%) scale(1.13)}}
 @keyframes club-camera-out {from{transform:translateX(3%) scale(1.13)}to{transform:none}}
-@keyframes club-raise {from{transform:translateY(5%) rotate(-3deg) scale(.96)}to{transform:translate(4%,-7%) rotate(12deg) scale(1.04)}}
+@keyframes club-raise {from{transform:rotate(-2deg)}to{transform:translate(4%,-7%) rotate(12deg) scale(1.04)}}
+#battleScene[data-ogre-strike="regroup"] #gameMonster {animation:ogre-rebalance .5s ease-out both;}
+@keyframes ogre-rebalance {from{transform:rotate(-2deg)}to{transform:rotate(0)}}
 @keyframes club-swing {0%{transform:translate(4%,-7%) rotate(12deg) scale(1.04)} 75%,100%{transform:translate(-61%,7%) rotate(-33deg) scale(1.07)}}
 @keyframes club-follow {from{transform:translate(-61%,7%) rotate(-33deg) scale(1.07)}to{transform:translate(-43%,4%) rotate(-19deg)}}
 @keyframes club-return {from{transform:translate(-43%,4%) rotate(-19deg)}to{transform:none}}
@@ -433,8 +434,11 @@ body.world-open { overflow: hidden; }
   bottom:calc(var(--battle-floor) + 4px)!important; height:min(80%,240px)!important; width:46%!important; right:3%!important;
 }
 #ibrahimGame.boss-encounter #gameMonster {
-  height:min(88%,305px)!important; width:55%!important; right:1.6%!important;
+  height:calc(100% - var(--battle-floor) - 32px)!important;
+  width: min(110%, 650px)!important; right:auto!important; left:61%;
+  translate:-50% 0;
 }
+#ibrahimGame.boss-encounter #gameMonster.enemy-pose-defeated {left:52%;}
 #ibrahimGame.in-encounter .battle-scene #gameMonster img,
 #ibrahimGame.in-encounter .battle-scene #gameHero img,
 #ibrahimGame.in-encounter .battle-scene #gameCompanion img {
@@ -443,7 +447,6 @@ body.world-open { overflow: hidden; }
 /* The supplied poses carry more transparent padding than the previous art. */
 #ibrahimGame.in-encounter #gameHero img { scale:1.30; transform-origin:50% 100%; }
 #ibrahimGame.in-encounter #gameCompanion img { scale:1.65; transform-origin:50% 100%; }
-#ibrahimGame.boss-encounter #gameMonster img { scale:1.13; transform-origin:50% 100%; }
 #ibrahimGame.in-encounter .battle-scene:not([data-normal-strike]):not([data-ogre-strike]):is(:not([data-motion]),[data-motion=""]) #gameHero,
 #ibrahimGame.in-encounter .battle-scene:not([data-normal-strike]):not([data-ogre-strike]):is(:not([data-motion]),[data-motion=""]) #gameCompanion,
 #ibrahimGame.in-encounter .battle-scene #gameMonster:not([class*="enemy-pose-"]) {
@@ -457,7 +460,7 @@ body.world-open { overflow: hidden; }
 }
 #ibrahimGame.in-encounter #gameHero::before { bottom:0; width:52%; left:23%; }
 #ibrahimGame.in-encounter #gameCompanion::before { width:65%; left:18%; }
-#ibrahimGame.boss-encounter #gameMonster::before { width:87%; left:6%; }
+#ibrahimGame.boss-encounter #gameMonster::before { width:58%; left:21%; height:14px; }
 #ibrahimGame.in-encounter .battle-menu button {
   grid-template-columns:clamp(26px,8vw,37px) minmax(0,1fr) clamp(26px,8vw,37px);
   gap:0; padding-inline:5px; font-size:clamp(1rem,4.1vw,1.18rem);
@@ -534,3 +537,13 @@ body.world-open { overflow: hidden; }
   #ibrahimGame:is(.boss-fallen,.boss-reveal) #battleScene::after {animation:none;opacity:.55;}
   .boss-victory .victory-confetti {display:none;}
 }
+
+
+/* Keep the larger guardian and its accents inside the arena through the lunge. */
+@keyframes arborian-r5 {
+  37% { transform:translateY(-6px) scale(1.025);filter:drop-shadow(0 0 18px #c2f575); }
+  66% { transform:translateX(-5%) translateY(-2px); }
+}
+#ibrahimGame.boss-encounter [data-normal-strike="impact"] #normalStrikeFx::before {right:24%;top:31%;}
+#ibrahimGame.boss-encounter [data-normal-strike="impact"] #normalStrikeFx i {right:35%;}
+#ibrahimGame.boss-encounter #forestImpact:is([data-cue="slash"],[data-cue="companion"])::before {right:22%;}

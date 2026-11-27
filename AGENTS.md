@@ -59,3 +59,12 @@
 - Mantenha as poses infantis de Arborian. Na vitória do chefe, grave o prazo da revelação e mantenha as recompensas nos campos de idempotência existentes. Preserve a derrota e a música dos inimigos comuns. O botão da vitória do chefe volta à trilha da Fase 1.
 - Preserve a identidade e o escopo da PWA. O backup entre origens deve ser local, explícito, validado e preservar uma cópia do progresso existente no destino. Confira a entrega pela rede e a revisão do worker no endereço habitual antes de alterar a política de atualização.
 - Push, merge, publicação, configuração de endereços externos e créditos pagos exigem autorização. A Fase 2 permanece fora do escopo.
+
+## Revisão 10
+
+- Base local em `810ddb354b3fb836f3575f4ff7892d992e5a51f5`. Preserve os atributos, os cinco sprites de Arborian e os tempos de combate. Confira a área visível dos galhos, a base e a sombra do chefe em telas estreitas, grandes e de pouca altura.
+- Preserve os contornos antialias dos sprites de Ibrahim. Corrija alfa somente dentro da silhueta e confira o resultado sobre fundos claros e escuros. O mapa continua usando quadros inteiros.
+- As trilhas de mapa, Ogro e Arborian têm arranjos distintos. Preserve o gesto de ativação, os controles e as duas músicas de vitória. Use somente gravação original e autorizada caso uma voz infantil seja acrescentada.
+
+- A Rede de Captura fica retirada da loja, mochila, combate, recompensas e coletas. Preserve `inventory.rope` e registros legados em saves e backups. O inventário jogável continua com Remédio, Cura, Bomba de fumaça e Doce do Sono.
+- A reação ao impacto do Ogro deve terminar em postura estável antes de erguer a clava. Golpes fatais seguem a derrota existente sem iniciar contra-ataque.

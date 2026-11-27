@@ -6,7 +6,6 @@ const forestLoot = (() => {
     {id:'fern-candy',x:11,y:11,kind:'sleepCandy',amount:1},
     {id:'lowland-chest',x:6,y:29,kind:'chest',amount:1},
     {id:'south-smoke',x:15,y:26,kind:'smoke',amount:1},
-    {id:'river-net',x:26,y:12,kind:'rope',amount:1},
     {id:'east-cure',x:38,y:13,kind:'injection',amount:1},
     {id:'upper-diamond',x:35,y:10,kind:'diamonds',amount:1},
     {id:'arena-chest',x:36,y:27,kind:'chest',amount:1},

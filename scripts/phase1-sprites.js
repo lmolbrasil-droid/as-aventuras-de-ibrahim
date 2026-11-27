@@ -3,10 +3,10 @@ const forestSprites=(()=>{
   const width=128,height=120,scale=.73;
   const rows={up:0,down:1,left:2,right:3};
   const atlases={
-    hero:{image:new Image(),steps:8,file:'walk-ibrahim-r9.webp'},
+    hero:{image:new Image(),steps:8,file:'walk-ibrahim-r10.webp'},
     dog:{image:new Image(),steps:7,file:'walk-dog-r9.webp'}
   };
-  for(const atlas of Object.values(atlases))atlas.image.src='assets/'+atlas.file+'?v=9';
+  for(const atlas of Object.values(atlases))atlas.image.src='assets/'+atlas.file+'?v=10';
 
   function draw(ctx,name,x,y,dir,pose){
     const {distance=0,weight=0}=pose||{};

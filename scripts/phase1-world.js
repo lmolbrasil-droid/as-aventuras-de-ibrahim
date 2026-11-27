@@ -43,7 +43,7 @@
     }else{
       cancelAnimationFrame(frameId);frameId=0;
     }
-    window.forestMusic.setMode(mode==='map'?'map':mode==='battle'?(state().boss?'boss':'wild'):'');
+    window.forestMusic.setMode(mode==='map'?'map':(mode==='intro'||mode==='battle')?(state().boss?'boss':'wild'):'');
   }
 
   function valid(point){
@@ -243,7 +243,7 @@
     saved.hadBattle=Object.hasOwn(battles,todayKey);
     saved.savedBattle=battles[todayKey]||null;
     battles[todayKey]={stage:data.game.stage,hp:enemy[2],won:false,escaped:false,attacks:0,
-      doubleUsed:false,rewardClaimed:false,chestOpened:false,captureAvailable:!boss,guardActive:false,exploration:true};
+      doubleUsed:false,rewardClaimed:false,chestOpened:false,guardActive:false,exploration:true};
     if(data.game.combat.hp<=0)data.game.combat.hp=data.game.combat.maxHp;
     persistPosition();
     held=null;
@@ -389,7 +389,7 @@
       const enemy=gameEnemy();
       saved.hadBattle=Object.hasOwn(battles,todayKey);
       saved.savedBattle=battles[todayKey]||null;
-      battles[todayKey]={stage:data.game.stage,hp:enemy[2],exploration:true,captureAvailable:!saved.boss};
+      battles[todayKey]={stage:data.game.stage,hp:enemy[2],exploration:true};
     }
     saved.battleDate=todayKey;
     restoreActors();

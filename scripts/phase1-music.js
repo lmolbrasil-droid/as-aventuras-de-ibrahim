@@ -12,28 +12,28 @@ window.forestMusic = (() => {
       ]
     },
     wild: {
-      bpm: 132, meter: 8, lead:'reed',
-      chords:['Am','Am','F','G','Am','C','Dm','E','F','G','Am','Am','Dm','F','E','Am'],
+      bpm: 156, meter: 8, lead:'reed',
+      chords:['Em','Em','C','D','Em','C','B','Em'],
       melody:[
-        'A4:2 C5 E5 A4 G4 E4 G4','A4:2 r E5 G5:2 E5 C5','F4 A4 C5:2 F5 E5 C5 A4','D5:2 G4 B4 D5 E5 G5:2',
-        'A5 G5 E5:2 C5 E5 B4 C5','G5:2 E5 C5 D5 E5 G5:2','F5 D5 F5 A5:2 G5 F5 D5','E5:2 B4 G#4 E5:3 r',
-        'C6:2 A5 F5 A5 C6 A5 F5','B5:2 G5 D5 F5 G5 A5:2','E5 A5:2 C6 B5 A5 G5 E5','A4 C5 E5 A5:2 E5 C5 B4',
-        'D5:2 F5 E5 D5 A4 D5 F5','C5 F5:2 A5 G5 F5 E5 C5','B4 E5 G#5:2 B5 A5 G#5 E5','A5:3 E5 C5 B4 A4 r'
+        'E5:2 E5 G5 B4:2 D5 E5','r G5 E5 D5 B4:2 G4 B4',
+        'C5 E5 G5:2 A5 G5 E5:2','D5:2 F#5 A5 r A5 F#5 D5',
+        'E5 E5 G5 B5:2 G5 F#5 E5','G5 A5 G5 E5 C5:2 G4 C5',
+        'F#5:2 D#5 B4 F#5 D#5 C5 B4','E5:3 B4 G4 E4:2 r'
       ]
     },
     boss: {
-      bpm: 106, meter: 8, lead:'horn',
-      chords:['Dm','Bb','Gm','A','Dm','F','Bb','A','Gm','Bb','F','C','Dm','Bb','A','Dm'],
+      bpm: 78, meter: 12, lead:'horn',
+      chords:['Dm','Bb','Gm','A','Dm','Bb','Gm','A'],
       melody:[
-        'D4:3 A4 Bb4:2 A4 F4','F4:2 Bb4:2 D5:3 C5','Bb4:2 G4 D5 G5:2 F5 D5','E5:3 C#5 A4:3 r',
-        'D5:3 A5 C6:2 Bb5 A5','A5:2 C6:2 F6:3 E6','D6:2 Bb5 F5 G5:2 A5 Bb5','A5:3 E5 C#5:3 r',
-        'G4:2 Bb4 D5 G5:3 F5','F5:2 Bb5 A5 Bb5:2 D6 C6','C6:3 A5 F5:2 A5 C6','E6:2 G6 E6 D6:2 C6 G5',
-        'F5:2 A5 D6 F6:2 E6 D6','Bb5:3 F5 Bb5:2 D6 C6','A5:2 G5 E5 C#5:2 E5 A5','D5:5 A4:2 r'
+        'D4:3 A4:3 C5:2 D5:4','F5:4 D5:2 Bb4:3 A4:3',
+        'G4:3 Bb4:3 D5:3 G5:3','E5:3 C#5:3 B4:3 A4:3',
+        'D5:3 A5:3 G5:2 F5:4','F5:3 D5:3 C5 Bb4 A4:4',
+        'Bb4:3 D5:3 G5:4 F5:2','E5:3 C#5:3 A4:3 r:3'
       ]
     }
   };
   const chords={Dm:[50,57,62,65],Bb:[46,53,58,62],F:[41,53,57,60],C:[48,55,60,64],
-    Gm:[43,55,58,62],A:[45,52,57,61],Am:[45,52,57,60],G:[43,55,59,62],E:[40,52,56,59]};
+    Gm:[43,55,58,62],A:[45,52,57,61],D:[50,57,62,66],Em:[40,52,55,59],B:[47,54,59,63]};
   const pitch={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
   const note=value=>value==='r'?0:12*(Number(value.at(-1))+1)+pitch[value[0]]+Number(value.includes('#'))-Number(value.includes('b'));
   const instruments={
@@ -41,6 +41,7 @@ window.forestMusic = (() => {
     string:{harmonics:[1,.51,.34,.22,.15,.08],attack:.17,release:.32,vibrato:2.3},
     harp:{harmonics:[1,.32,.18,.14,.06],attack:.009,release:.16,vibrato:0},
     reed:{harmonics:[1,.31,.49,.14,.15],attack:.04,release:.11,vibrato:2.5},
+    choir:{harmonics:[1,.31,.18,.44,.28,.12],attack:.38,release:.39,vibrato:2.2},
     horn:{harmonics:[1,.54,.26,.2,.1,.06],attack:.095,release:.2,vibrato:1.2}
   };
   let ctx, master, scoreBus, dry, reverb, noise, timer, track, lightningBuffer;
@@ -126,15 +127,27 @@ window.forestMusic = (() => {
       beat+=Number(length);
     }
     const add=(beat,midi,length,volume,type)=>notes.push({beat,midi,length,volume,type});
-    const map=mode==='map',boss=mode==='boss';
-    for(const [i,midi] of upper.entries())add(i*.19,midi,map?5.7:7.4,.036,'string');
-    for(const t of map?[0,3]:[0,2,4,6])add(t,bass+(t%4?12:0),map?2.6:1.45,.075,boss?'string':'harp');
-    for(let t=0;t<score.meter;t++){
-      if(map||t%2===1)add(t,upper[(t+bar)%3]+(map&&t%3===2?12:0),.67,map?.052:.032,'harp');
-    }
-    if(!map){
-      for(const t of boss?[0,3,4,7]:[0,2.5,4,6,7])notes.push({beat:t,drum:true,big:t%4===0,volume:t%4===0?.13:.047});
-      if(boss&&bar%4>=2)add(4,upper[1]+12,3.1,.035,'horn');
+    const hit=(beat,big,volume)=>notes.push({beat,drum:true,big,volume});
+    if(mode==='map'){
+      upper.forEach((midi,i)=>add(i*.19,midi,5.7,.036,'string'));
+      for(const t of [0,3])add(t,bass+(t?12:0),2.6,.075,'harp');
+      for(let t=0;t<6;t++)add(t,upper[(t+bar)%3]+(t%3===2?12:0),.67,.052,'harp');
+    }else if(mode==='wild'){
+      for(const [i,t] of [0,.75,1.5,2.5,3,4,4.75,5.5,6.5,7].entries())
+        add(t,i%3?bass+12:upper[0],.37,i%3?.061:.096,'string');
+      for(const t of [0,3.5,5,7])hit(t,true,.19);
+      for(const t of [1,2,3,4.5,5.5,6,7.5])hit(t,false,.056);
+      for(const t of [2,6])add(t,upper[2]-12,.42,.095,'horn');
+    }else{
+      upper.forEach((midi,i)=>{
+        add(i*.19,midi,9,.066,'choir');
+        add(3+i*.33,midi+12,7.2,.044,'string');
+      });
+      for(const t of [0,3,6,9]){
+        add(t,bass,2.35,.103,'string');
+        add(t+.5,upper[0],1.6,.058,'horn');
+      }
+      for(const t of [0,5,6,10.5])hit(t,true,t%6===0?.24:.13);
     }
     return notes.sort((a,b)=>a.beat-b.beat);
   }
@@ -162,29 +175,32 @@ window.forestMusic = (() => {
     if(mode!=='victory')lastVictory=false;
     if(mode==='victory'&&lastVictory)return;
     if(track?.mode===mode)return;
+    const now=ctx.currentTime, handoff=track?.mode?.length ? .045 : 0;
     if(track){
-      const gain=track.dest, t=ctx.currentTime;
-      if(typeof gain.gain.cancelAndHoldAtTime==='function')gain.gain.cancelAndHoldAtTime(t);
+      const gain=track.dest;
+      if(typeof gain.gain.cancelAndHoldAtTime==='function')gain.gain.cancelAndHoldAtTime(now);
       else{
-        const fraction=Math.max(0,Math.min(1,(t-track.started)/.42));
-        gain.gain.cancelScheduledValues(t);
-        gain.gain.setValueAtTime(fraction,t);
+        const fraction=Math.max(0,Math.min(1,(now-track.started)/track.fade));
+        gain.gain.cancelScheduledValues(now);
+        gain.gain.setValueAtTime(fraction,now);
       }
-      gain.gain.linearRampToValueAtTime(0,t+.42);
-      setTimeout(()=>gain.disconnect(),850);
+      gain.gain.linearRampToValueAtTime(0,now+handoff);
+      setTimeout(()=>gain.disconnect(),100);
       track=null;
     }
     clearInterval(timer);
     if(!mode)return;
-    const dest=ctx.createGain(),score=scores[mode],t=ctx.currentTime;
-    dest.gain.setValueAtTime(0,t);dest.gain.linearRampToValueAtTime(1,t+.42);dest.connect(scoreBus);
+    const dest=ctx.createGain(),score=scores[mode],t=now+handoff;
+    const fade=mode==='wild'||mode==='boss'?.065:.42;
+    dest.gain.setValueAtTime(0,now);dest.gain.setValueAtTime(0,t);
+    dest.gain.linearRampToValueAtTime(1,t+fade);dest.connect(scoreBus);
     if(mode==='victory'||mode==='boss-victory'){
       if(mode==='victory'){lastVictory=true;playVictory(dest,t+.04);}
       else playBossVictory(dest,t+.04);
-      track={mode,dest,started:t};
+      track={mode,dest,started:t,fade};
       return;
     }
-    track={mode,score,dest,started:t,bar:0,index:0,time:t+.025,events:arrange(mode,score,0)};
+    track={mode,score,dest,started:t,fade,bar:0,index:0,time:t+.025,events:arrange(mode,score,0)};
     timer=setInterval(schedule,50);schedule();
   }
   function playVictory(dest,t){
@@ -315,7 +331,7 @@ window.forestMusic = (() => {
         'ogre-charge':[[36,41],'reed',.15],club:[[32,28],'horn',.08],
         leaves:[[69,74,81],'harp',.13],roots:[[38,50,63,57],'horn',.09],
         medicine:[[60,64,72],'harp',.10],injection:[[60,67,76,84],'flute',.09],
-        rope:[[79,62,84],'reed',.08],smoke:[[43,40,35],'flute',.13],
+        smoke:[[43,40,35],'flute',.13],
         sleepCandy:[[74,70,65,58],'string',.15],sleep:[[72,69],'flute',.16],
         pickup:[[72,79,84],'harp',.06],treasure:[[60,67,72,79,84],'harp',.08]};
       const pattern=patterns[name];if(!pattern)return;
