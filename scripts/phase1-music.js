@@ -43,7 +43,7 @@ window.forestMusic = (() => {
     reed:{harmonics:[1,.31,.49,.14,.15],attack:.04,release:.11,vibrato:2.5},
     horn:{harmonics:[1,.54,.26,.2,.1,.06],attack:.095,release:.2,vibrato:1.2}
   };
-  let ctx, master, dry, reverb, noise, timer, track;
+  let ctx, master, scoreBus, dry, reverb, noise, timer, track;
   let lastVictory=false;
   let requested='',enabled=localStorage.getItem('ibrahimMusic')!=='off';
   const waves={};
@@ -58,6 +58,7 @@ window.forestMusic = (() => {
     if(!Audio||ctx)return;
     ctx=new Audio();
     master=ctx.createGain();master.gain.value=.7;
+    scoreBus=ctx.createGain();scoreBus.connect(master);
     ctx.addEventListener('statechange',activate);
     dry=ctx.createDynamicsCompressor();
     master.connect(dry);dry.connect(ctx.destination);
@@ -171,7 +172,7 @@ window.forestMusic = (() => {
     clearInterval(timer);
     if(!mode)return;
     const dest=ctx.createGain(),score=scores[mode],t=ctx.currentTime;
-    dest.gain.setValueAtTime(0,t);dest.gain.linearRampToValueAtTime(1,t+.42);dest.connect(master);
+    dest.gain.setValueAtTime(0,t);dest.gain.linearRampToValueAtTime(1,t+.42);dest.connect(scoreBus);
     if(mode==='victory'){
       lastVictory=true;playVictory(dest,t+.04);
       track={mode,dest,started:t};
@@ -213,11 +214,53 @@ window.forestMusic = (() => {
     enabled=!enabled;localStorage.setItem('ibrahimMusic',enabled?'on':'off');
     label();unlock();activate();
   });
+  function sweep(t,duration,from,to,gain){
+    const sample=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),amp=ctx.createGain();
+    sample.buffer=noise;
+    filter.type='bandpass';filter.Q.value=.85;
+    filter.frequency.setValueAtTime(from,t);
+    filter.frequency.exponentialRampToValueAtTime(to,t+duration);
+    amp.gain.setValueAtTime(.0001,t);
+    amp.gain.linearRampToValueAtTime(gain,t+.025);
+    amp.gain.exponentialRampToValueAtTime(.0001,t+duration);
+    sample.connect(filter);filter.connect(amp);amp.connect(master);
+    sample.start(t,0,duration+.01);
+  }
+  const details={
+    'bag-open':{sweep:[.23,430,870,.17],notes:[91,96,88],voice:'harp',gap:.055,delay:.09,volume:.056},
+    'bag-close':{sweep:[.13,790,305,.10],notes:[81,88],voice:'harp',gap:.035,delay:.02,volume:.04},
+    'normal-ready':{sweep:[.43,280,1100,.13],notes:[47,54,61],voice:'string',gap:.14,volume:.11},
+    'normal-swing':{sweep:[.39,3400,570,.29],notes:[83,71],voice:'reed',gap:.075,volume:.125},
+    'normal-impact':{sweep:[.21,1600,440,.22],notes:[41,70,77],voice:'horn',gap:.034,volume:.16,drum:true},
+    'normal-recoil':{sweep:[.23,850,290,.105],notes:[55,43],voice:'reed',gap:.08,volume:.10},
+    'discover-item':{notes:[67,72,76,79,84],voice:'harp',gap:.086,volume:.115},
+    'discover-coins':{notes:[81,88,84,91],voice:'harp',gap:.059,volume:.11},
+    'discover-gem':{notes:[72,79,83,86,91],voice:'flute',gap:.10,volume:.098},
+    'discover-chest':{sweep:[.20,330,960,.14],notes:[48,60,67,74,79,84],voice:'horn',gap:.093,volume:.09}
+  };
   return {
     unlock,
     setMode(mode){requested=mode;activate();},
+    duck(duration){
+      if(!ctx||ctx.state!=='running')return;
+      const now=ctx.currentTime;
+      scoreBus.gain.cancelScheduledValues(now);
+      scoreBus.gain.setValueAtTime(1,now);
+      scoreBus.gain.linearRampToValueAtTime(.61,now+.16);
+      scoreBus.gain.setValueAtTime(.61,now+duration-.35);
+      scoreBus.gain.linearRampToValueAtTime(1,now+duration);
+    },
     effect(name){
       if(!ctx||ctx.state!=='running')return;
+      if(name.startsWith('bag-')&&!enabled)return;
+      const detail=details[name];
+      if(detail){
+        const t=ctx.currentTime+.012;
+        if(detail.sweep)sweep(t,...detail.sweep);
+        if(detail.drum)drum(master,t,true,.21);
+        detail.notes.forEach((note,index)=>voice(master,note,t+(detail.delay||0)+detail.gap*index,.2,detail.volume,detail.voice));
+        return;
+      }
       const patterns={slash:[[76,68,81],'reed',.07],companion:[[52,67,74],'horn',.09],
         ward:[[62,69,81],'string',.12],block:[[45,72,84],'horn',.06],
         'ogre-charge':[[36,41],'reed',.15],club:[[32,28],'horn',.08],

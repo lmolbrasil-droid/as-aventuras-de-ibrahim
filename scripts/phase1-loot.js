@@ -12,50 +12,60 @@ const forestLoot = (() => {
     {id:'arena-chest',x:36,y:27,kind:'chest',amount:1},
     {id:'deep-coins',x:28,y:27,kind:'coins',amount:12}
   ];
-  const coins={name:'moedas',glyph:'●',color:'#fbd470'};
-  const gems={name:'diamante',glyph:'◆',color:'#a0f3ee'};
-  const chest={name:'baú',glyph:'▣',color:'#e3a64e'};
-  const icons=new Map(gameStore.map(item=>{
+  const treasureArt='assets/forest-treasure.svg';
+  const meta={
+    coins:{name:'Moedas',art:treasureArt+'#coins',sound:'discover-coins'},
+    diamonds:{name:'Diamante',art:treasureArt+'#diamond',sound:'discover-gem'},
+    chest:{name:'Baú da floresta',art:treasureArt+'#chest',sound:'discover-chest'}
+  };
+  const items=new Map(gameStore.map(item=>[item.id,item]));
+  const icons=new Map([...items,...Object.entries(meta)].map(([id,item])=>{
     const image=new Image();image.src=item.art;
-    return [item.id,image];
+    return [id,image];
   }));
-  const meta={coins,diamonds:gems,chest};
   const collected=()=>data.game.exploration.collected ||= {};
   const tile=forestTerrain.tile;
   let sparkle=null;
   function collect(x,y){
     const drop=drops.find(item=>item.x===x&&item.y===y&&!collected()[item.id]);
-    if(!drop)return '';
+    if(!drop)return null;
     const {id,kind,amount}=drop;
     const inventory=data.game.inventory;
-    let message;
+    const item=meta[kind]||items.get(kind);
+    const reward={title:'Tesouro encontrado',art:item.art,sound:item.sound||'discover-item'};
     if(kind==='coins'||kind==='chest'){
       const coins=kind==='chest'?12:amount;
       data.coins+=coins;
       data.coinLedger.unshift({text:'Tesouro da Floresta Encantada',amount:coins,date:new Date().toISOString()});
-      message='+'+coins+' moedas';
+      reward.name='+'+coins+' moedas';
+      reward.detail='Adicionadas à carteira.';
       if(kind==='chest'){
-        const item=id==='lowland-chest'?'medicine':'sleepCandy';
-        inventory[item]=(inventory[item]||0)+1;
-        message='Baú aberto: '+message+' e +1 '+gameStore.find(entry=>entry.id===item).name;
+        const bonus=id==='lowland-chest'?'medicine':'sleepCandy';
+        inventory[bonus]=(inventory[bonus]||0)+1;
+        reward.name=item.name;
+        reward.detail='+'+coins+' moedas na carteira · +1 '+items.get(bonus).name+' na mochila.';
       }
     }else if(kind==='diamonds'){
       data.game.diamonds+=amount;
-      message='+'+amount+' diamante';
+      reward.name='+'+amount+' '+item.name;
+      reward.detail='Adicionado à carteira.';
     }else{
       inventory[kind]=(inventory[kind]||0)+amount;
-      message='+'+amount+' '+gameStore.find(item=>item.id===kind).name;
+      reward.name='+'+amount+' '+item.name;
+      reward.detail='Adicionado à mochila.';
     }
     collected()[id]=true;
     sparkle={x:(x+.5)*tile,y:(y+.5)*tile,start:performance.now()};
-    forestMusic.effect(kind==='chest'?'treasure':'pickup');
-    return message;
+    return reward;
   }
-  function actors(ctx,time){
+  function actors(ctx,time,view){
     const seen=collected();
-    const entries=drops.filter(drop=>!seen[drop.id]).map(drop=>{
+    const entries=[];
+    for(const drop of drops){
+      if(seen[drop.id])continue;
       const x=(drop.x+.5)*tile,y=(drop.y+.5)*tile;
-      return {x,y,draw(){
+      if(x<view.x-30||x>view.right+30||y<view.y-30||y>view.bottom+42)continue;
+      entries.push({x,y,draw(){
         const lift=Math.sin(time/350+drop.x)*2;
         ctx.save();
         ctx.translate(x,y-12+lift);
@@ -67,19 +77,9 @@ const forestLoot = (() => {
         ctx.beginPath();ctx.ellipse(0,6,14,5,0,0,Math.PI*2);ctx.fill();
         const img=icons.get(drop.kind);
         if(img?.complete&&img.naturalWidth)ctx.drawImage(img,-26,-23,52,36);
-        else if(drop.kind==='chest'){
-          ctx.fillStyle='#613a23';ctx.fillRect(-12,-12,24,19);
-          ctx.fillStyle='#ba7942';ctx.fillRect(-11,-12,22,7);
-          ctx.strokeStyle='#ffe3a2';ctx.lineWidth=2;ctx.strokeRect(-12,-12,24,19);
-          ctx.fillStyle='#ffe3a2';ctx.fillRect(-2,-3,4,5);
-        }else{
-          ctx.fillStyle=meta[drop.kind]?.color||'#f9e5a8';
-          ctx.font='bold 22px sans-serif';ctx.textAlign='center';
-          ctx.fillText(meta[drop.kind]?.glyph||'✦',0,4);
-        }
         ctx.restore();
-      }};
-    });
+      }});
+    }
     if(sparkle&&time-sparkle.start<780){
       const {x,y,start}=sparkle,t=Math.max(0,(time-start)/780);
       entries.push({x,y:y+4,draw(){

@@ -74,3 +74,47 @@ Base local: commit `c8c8a24d8ca1ccc21f9a5f7c12c14f0fd7132646`, na branch `dev-fa
 - Jogo: `scripts/phase1-combat.js`, `scripts/phase1-loot.js`, `scripts/phase1-music.js`, `scripts/phase1-sprites.js`, `scripts/phase1-world.js` e `scripts/phase1.css`.
 - Arte: `assets/arborian/{idle,attack,defend,hurt,defeated}.webp`, `assets/walk-ibrahim.webp`, `assets/walk-dog.webp`, `assets/item-backpack.svg` e `assets/item-sleep.svg`.
 - Validação e continuidade: `scripts/test-phase1.cjs`, `AGENTS.md` e `PROGRESSO.md`.
+
+# Revisão 6
+
+Base: `10a76085f5004373c40b533f78785af86b69f1d7`, na branch `dev-fase1-musica-companheiro`.
+
+## Implementação
+
+- A caminhada usa atlas recompostos a partir da arte oficial. Braços, pernas e patas têm fases alternadas, o tronco e a cabeça acompanham a passada, e a pose de parada usa quadros de assentamento. O cachorro percorre a mesma trilha com uma fase de movimento própria.
+- A mochila no mapa usa couro escuro, moldura com detalhes dourados, compartimentos, indicadores de quantidade e descrições integradas. A barra vermelha mostra vida atual/máxima e anima a recuperação. A abertura e o fechamento têm transições e sons de couro e metal, que respeitam a opção Música.
+- O **Corte Relâmpago** dura cerca de 2,5 s. Preparação até 0,7 s, execução até 1,2 s, impacto até 1,8 s e retorno até 2,5 s. A barra do inimigo muda no impacto. O áudio tem quatro etapas e a trilha continua em segundo plano com redução temporária de volume. O dano e o contra-ataque seguem as regras da Revisão 5.
+- Cada coleta apresenta arte, quantidade, destino da recompensa e som. A janela pausa a entrada e os encontros. Ela fecha em três segundos ou ao tocar CONTINUAR. A recompensa e a posição são gravadas juntas. Os IDs e valores da Revisão 5 foram preservados.
+- O rótulo Revisão 6 aparece abaixo da capa. O cache passou para `ibrahim-v154-phase1-r6` e scripts, CSS e atlas têm versão nas URLs. A página verifica o worker ao reabrir ou voltar à rede. `_headers` orienta a revalidação das entradas e do worker no Netlify. O armazenamento e o manifesto mantêm a identidade da PWA.
+
+## Desempenho
+
+A Revisão 5 redimensionava consultando o layout a cada quadro, redesenhava o terreno e as copas visíveis, e gravava o estado completo a cada passo. Também podia agendar um segundo quadro ao entrar na apresentação de encontro durante o próprio loop. A Revisão 6 usa observação de tamanho, compõe o cenário estático antecipadamente, repinta apenas copas que encobrem atores móveis, agrupa gravações de caminhada e mantém um só loop. A resolução interna tem teto de cerca de dois megapixels para vistas maiores.
+
+Medição em Chromium com limitação de CPU 4×, quatro trechos de 670 ms por configuração. Os números abaixo são o intervalo p95 entre quadros, em ms. Menor é melhor.
+
+| Configuração | Modo | Revisão 5 | Revisão 6 |
+|---|---|---:|---:|
+| Pixel 7 emulado | Normal | 83,4 | 50,0 |
+| Pixel 7 emulado | Tela cheia | 66,7 | 50,0 |
+| Perfil de tela grande, DPR 2 | Normal | 150,0 | 66,7 |
+| Perfil de tela grande, DPR 2 | Tela cheia | 183,3 | 66,6 |
+
+No Pixel 7 emulado, o canvas permaneceu em 756 × 1528 em ambos os modos. No perfil grande, passou de 1104 × 2010 para 1048 × 1908. O heap JS observado foi de aproximadamente 5–6 MB nas amostras, sem medir memória de GPU. O ambiente emulado manteve as dimensões CSS ao entrar no fullscreen nativo. Os resultados mostram a redução de trabalho na máquina de testes; o travamento relatado em Android físico ainda precisa ser reavaliado.
+
+## Testes e evidências
+
+- Chromium com toque e Pixel 7 emulado e teste desktop com fullscreen nativo. Caminhada nas quatro direções, rastro, colisão, quatro tempos do ataque, dano no impacto, trava contra comando duplicado, sono, defesa, compra, vitória e derrota.
+- Viewport de 320 px, abertura e fechamento com som e opção mudo, cura e atualização da barra. As dez coletas foram percorridas em Chromium. O teste verificou a pausa, o fechamento manual, o timeout e a persistência das marcas após recarga.
+- O teste comparou a síntese de áudio do ataque normal com a fase visual em execução. As trilhas existentes foram verificadas nos testes principais.
+- A atualização real do worker da Revisão 5 para a 6 foi ensaiada na mesma origem. Após o novo worker assumir, a versão apareceu corretamente offline, o cache anterior saiu e saldo, posição e inventário permaneceram.
+- O relatório de instalação do Chromium com perfil persistente retornou zero erros. O app foi instalado e lançado pelo protocolo do Chromium. A caminhada funcionou offline antes e depois do fullscreen nesse alvo. Em headless, o Chromium reportou modo browser para a janela lançada. Os dois vídeos incluem o áudio capturado da saída do sintetizador. As evidências ficam em `/workspace/shared/downloads/revisao-6`.
+
+## Arquivos e limites
+
+- Jogo: `index.html`, `scripts/phase1-world.js`, `scripts/phase1-terrain.js`, `scripts/phase1-sprites.js`, `scripts/phase1-combat.js`, `scripts/phase1-loot.js`, `scripts/phase1-music.js` e `scripts/phase1.css`.
+- Arte: `assets/walk-ibrahim.webp`, `assets/walk-dog.webp` e `assets/forest-treasure.svg`.
+- PWA e publicação futura: `sw.js` e `_headers`. Testes e continuidade: `scripts/test-phase1.cjs`, `scripts/benchmark-phase1.cjs`, `AGENTS.md` e `PROGRESSO.md`.
+- A capa, Arborian, o guardião reservado, as três composições e o terreno da Fase 1 foram preservados. O terreno continua com os mesmos elementos e posições, com mudanças na renderização.
+- A causa exata da versão antiga no endereço habitual do Netlify ainda é indeterminada. A troca de versão foi validada localmente. A aparência, a fluidez e a mixagem ainda dependem da avaliação em Android físico.
+- Nenhum serviço pago ou crédito externo foi utilizado. A revisão está local até autorização expressa para envio e publicação de teste.

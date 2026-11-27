@@ -176,17 +176,38 @@ const forestTerrain = (() => {
     const c=art.getContext('2d');c.translate(43-X(x),74-X(y));tree(c,x,y);
     return {x:X(x),y:X(y),art,left:X(x)-43,top:X(y)-74};
   });
+  const canopyRows=Array.from({length:rows},()=>[]);
+  for(const tree of canopies)canopyRows[Math.floor(tree.y/tile)].push(tree);
+  for(const {art,left,top} of canopies)ctx.drawImage(art,left,top);
   function draw(c,view,actors,time){
-    c.drawImage(paper,0,0);
+    const cropX=Math.floor(view.x),cropY=Math.floor(view.y);
+    const cropWidth=Math.min(width,Math.ceil(view.right))-cropX;
+    const cropHeight=Math.min(height,Math.ceil(view.bottom))-cropY;
+    c.drawImage(paper,cropX,cropY,cropWidth,cropHeight,cropX,cropY,cropWidth,cropHeight);
     for(let i=0;i<34;i++){
       const y=((i*37+time*.012)%height),x=X(river(y/tile-.5))+Math.sin(i*7)*22;
       if(x<view.x||x>view.right||y<view.y||y>view.bottom||onBridge(x/tile-.5,y/tile-.5))continue;
       ellipse(c,x,y,5+i%3,1,'#c5f4d278');
     }
-    const visible=canopies.filter(t=>t.x>view.x-50&&t.x<view.right+50&&t.y>view.y-30&&t.y<view.bottom+80);
-    for(const entry of [...visible,...actors].sort((a,b)=>a.y-b.y)){
-      if(entry.art)c.drawImage(entry.art,entry.left,entry.top);
-      else entry.draw();
+    actors.sort((a,b)=>a.y-b.y);
+    for(const actor of actors){
+      actor.draw();
+      // The landscape is a single blit. Only repaint trees that overlap a
+      // moving object's footprint, in front of that object.
+      const left=actor.x-37,top=actor.y-82,right=actor.x+37,bottom=actor.y+6;
+      const start=Math.max(0,Math.floor(actor.y/tile));
+      const end=Math.min(rows,Math.ceil((bottom+74)/tile));
+      let clipped=false;
+      for(let row=start;row<end;row++){
+        for(const tree of canopyRows[row]){
+          if(tree.y<actor.y||tree.left>right||tree.left+86<left||tree.top>bottom||tree.top+88<top)continue;
+          if(!clipped){
+            c.save();c.beginPath();c.rect(left,top,right-left,bottom-top);c.clip();clipped=true;
+          }
+          c.drawImage(tree.art,tree.left,tree.top);
+        }
+      }
+      if(clipped)c.restore();
     }
     for(let i=0;i<24;i++){
       const x=rng(i,3,1)*width+Math.sin(time*.001+i)*15,y=rng(i,3,2)*height+Math.cos(time*.002+i)*9;

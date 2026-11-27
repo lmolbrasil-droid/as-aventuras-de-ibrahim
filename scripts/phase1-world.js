@@ -3,17 +3,22 @@
   const screen=document.getElementById('ibrahimExploreScreen');
   const toolbar=document.getElementById('worldToolbar');
   const canvas=document.getElementById('ibrahimExploreCanvas');
-  const ctx=canvas.getContext('2d');
+  const ctx=canvas.getContext('2d',{alpha:false});
   const status=document.getElementById('exploreStatus');
   const intro=document.getElementById('encounterIntro');
   const fullscreen=document.getElementById('worldFullscreen');
   const bag=document.getElementById('battleBagModal');
+  const treasure=document.getElementById('forestTreasure');
+  const treasureContinue=document.getElementById('treasureContinue');
   const terrain=forestTerrain;
   const directions={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
   const keys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
-  const stepLength=180;
+  const stepLength=208;
   let player,dog,step,held,queuedDirection,frameId,lastFrame=0,camera;
-  let mode='',presentationTimer,resultTimer;
+  let mode='',presentationTimer,resultTimer,treasureTimer,positionTimer;
+  let viewWidth=0,viewHeight=0,ratio=1,pixelRatio=0,viewportDirty=true;
+  new ResizeObserver(()=>{viewportDirty=true;}).observe(canvas);
+  const paused=()=>!bag.hidden||!treasure.hidden;
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   const pickDirection=(x,y)=>x<0?'left':x>0?'right':y<0?'up':'down';
   const state=()=>data.game.exploration ||= {};
@@ -30,7 +35,12 @@
     screen.hidden=mode!=='map'&&mode!=='intro';
     intro.hidden=mode!=='intro';
     root.scrollTop=0;
-    if((mode==='map'||mode==='intro')&&!frameId)frameId=requestAnimationFrame(draw);
+    viewportDirty=true;
+    if(mode==='map'||mode==='intro'){
+      if(!frameId){lastFrame=performance.now();frameId=requestAnimationFrame(draw);}
+    }else{
+      cancelAnimationFrame(frameId);frameId=0;
+    }
     window.forestMusic.setMode(mode==='map'?'map':mode==='battle'?(state().boss?'boss':'wild'):'');
   }
 
@@ -57,26 +67,60 @@
     const neighbor=[directions.left,directions.down,directions.right,directions.up]
       .map(([dx,dy])=>({x:player.x+dx,y:player.y+dy})).find(valid);
     dog={...(adjacent?previous:neighbor||player),dir:'down'};
+    player.gait=dog.gait=0;
     step=null;
     camera=null;
   }
 
-  function persistPosition(){
+  function flushPosition(){
+    clearTimeout(positionTimer);
+    positionTimer=undefined;
+    localStorage.setItem(KEY,JSON.stringify(data));
+  }
+  function persistPosition(immediate=true){
     const saved=state();
     saved.player={x:player.x,y:player.y};
     saved.companion={x:dog.x,y:dog.y};
     saved.facing=player.dir;
-    save();
+    if(immediate)flushPosition();
+    else positionTimer ||= setTimeout(flushPosition,450);
   }
+  window.addEventListener('pagehide',()=>{if(positionTimer)flushPosition();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&positionTimer)flushPosition();});
+
+  function dismissTreasure(){
+    if(treasure.hidden)return;
+    clearTimeout(treasureTimer);
+    treasure.hidden=true;
+    screen.inert=toolbar.inert=false;
+  }
+  function presentTreasure(reward){
+    held=null;queuedDirection=null;
+    screen.inert=toolbar.inert=true;
+    document.getElementById('treasureTitle').textContent=reward.title;
+    document.getElementById('treasureArt').src=reward.art;
+    document.getElementById('treasureName').textContent=reward.name;
+    document.getElementById('treasureDetail').textContent=reward.detail;
+    treasure.hidden=false;
+    treasureContinue.focus({preventScroll:true});
+    forestMusic.effect(reward.sound);
+    treasureTimer=setTimeout(dismissTreasure,3000);
+  }
+  treasureContinue.addEventListener('click',dismissTreasure);
+  treasure.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();dismissTreasure();}
+    if(e.key==='Tab'){e.preventDefault();treasureContinue.focus();}
+  });
 
   function startStep(dir,time){
-    if(mode!=='map'||step||!bag.hidden)return;
+    if(mode!=='map'||step||paused())return;
     const [dx,dy]=directions[dir], x=player.x+dx,y=player.y+dy;
-    player.dir=dir;
-    if(terrain.blocked(x,y))return;
-    step={start:time,from:{...player},dogFrom:{...dog}};
-    dog={x:player.x,y:player.y,dir:pickDirection(player.x-dog.x,player.y-dog.y)};
-    player={x,y,dir};
+    const from={...player};
+    if(terrain.blocked(x,y)){player.dir=dir;return;}
+    const dogFrom={...dog};
+    step={start:time,from,dogFrom};
+    dog={x:player.x,y:player.y,dir:pickDirection(player.x-dog.x,player.y-dog.y),gait:1-dog.gait};
+    player={x,y,dir,gait:1-player.gait};
   }
 
   function arrive(){
@@ -85,12 +129,12 @@
     if(saved.cooldown>0)saved.cooldown--;
     const {x,y}=player;
     const reward=forestLoot.collect(x,y);
-    persistPosition();
+    persistPosition(!!reward);
     if(reward){
-      status.textContent=reward;
-      status.animate([{color:'#fff2a3',background:'#415e37'},{color:'#fff0c8'}],1000);
+      presentTreasure(reward);
       renderShop();
       document.getElementById('coinBalance').textContent=data.coins.toLocaleString('pt-BR')+' 🪙';
+      document.getElementById('diamondBalance').textContent=data.game.diamonds.toLocaleString('pt-BR')+' 💎';
       return;
     }
     const boss=terrain.arena;
@@ -106,27 +150,36 @@
   }
 
   function draw(time){
-    frameId=0;
-    if(mode!=='map'&&mode!=='intro')return;
+    if(mode!=='map'&&mode!=='intro'){frameId=0;return;}
     const dt=Math.min(40,time-lastFrame);
     lastFrame=time;
     if(step&&time-step.start>=stepLength)arrive();
-    if(!step&&queuedDirection){
+    if(!step&&queuedDirection&&!paused()){
       const next=queuedDirection;
       queuedDirection=null;
       startStep(next,time);
-    }else if(!step&&held&&time>=held.next){
+    }else if(!step&&held&&time>=held.next&&!paused()){
       startStep(held.dir,time);
       held.next=time+stepLength;
     }
-    const vw=canvas.clientWidth,vh=canvas.clientHeight;
-    if(!vw||!vh){frameId=requestAnimationFrame(draw);return;}
-    const ratio=Math.min(devicePixelRatio||1,2);
-    if(canvas.width!==Math.round(vw*ratio)||canvas.height!==Math.round(vh*ratio)){
-      canvas.width=Math.round(vw*ratio);canvas.height=Math.round(vh*ratio);
+    if(viewportDirty||pixelRatio!==devicePixelRatio){
+      viewWidth=canvas.clientWidth;
+      viewHeight=canvas.clientHeight;
+      pixelRatio=devicePixelRatio;
+      // Keep retina density on phone-sized views. Cap large backing surfaces,
+      // whose fill cost increases quadratically with device pixel ratio.
+      const surfaceBudget=2000000;
+      ratio=Math.min(pixelRatio||1,2,Math.sqrt(surfaceBudget/Math.max(1,viewWidth*viewHeight)));
+      const width=Math.max(1,Math.round(viewWidth*ratio)),height=Math.max(1,Math.round(viewHeight*ratio));
+      if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}
+      viewportDirty=false;
     }
+    const vw=viewWidth,vh=viewHeight;
+    if(!vw||!vh){frameId=requestAnimationFrame(draw);return;}
     const zoom=Math.max(vw/850,vh/625, .8);
-    const tween=step?clamp((time-step.start)/stepLength,0,1):1;
+    const progress=step?clamp((time-step.start)/stepLength,0,1):1;
+    const stops=!(held||queuedDirection);
+    const tween=stops&&progress>.78?1-(1-progress)**2/.22:progress;
     const position=(now,from)=>({
       x:(now.x+.5+(from?(from.x-now.x)*(1-tween):0))*terrain.tile,
       y:(now.y+.5+(from?(from.y-now.y)*(1-tween):0))*terrain.tile
@@ -138,12 +191,23 @@
     camera.x=clamp(camera.x+(target.x-camera.x)*(1-Math.exp(-dt/115)),0,maxX);
     camera.y=clamp(camera.y+(target.y-camera.y)*(1-Math.exp(-dt/115)),0,maxY);
     const view={...camera,right:camera.x+vw/zoom,bottom:camera.y+vh/zoom};
-    const frame=step?Math.min(7,Math.floor(tween*8)):8;
+    function pose(actor,from,offset){
+      if(!step)return {dir:actor.dir,frame:12};
+      // Keep the previous body orientation over the pivot and settle the
+      // last footfall when input is released.
+      const dir=progress<.14?from.dir:actor.dir;
+      if(stops&&progress>.78){
+        const end=progress>.91?1:0;
+        return {dir,frame:13+(1-actor.gait)*2+end};
+      }
+      return {dir,frame:((1-actor.gait)*6+Math.floor(progress*6)+offset)%12};
+    }
+    const heroPose=pose(player,step?.from,0),dogPose=pose(dog,step?.dogFrom,2);
     ctx.setTransform(zoom*ratio,0,0,zoom*ratio,-camera.x*zoom*ratio,-camera.y*zoom*ratio);
     terrain.draw(ctx,view,[
-      ...forestLoot.actors(ctx,time),
-      {...d,draw:()=>forestSprites.draw(ctx,'dog',d.x,d.y,dog.dir,frame)},
-      {...p,draw:()=>forestSprites.draw(ctx,'hero',p.x,p.y,player.dir,frame)}
+      ...forestLoot.actors(ctx,time,view),
+      {...d,draw:()=>forestSprites.draw(ctx,'dog',d.x,d.y,dogPose.dir,dogPose.frame)},
+      {...p,draw:()=>forestSprites.draw(ctx,'hero',p.x,p.y,heroPose.dir,heroPose.frame)}
     ],time);
     frameId=requestAnimationFrame(draw);
   }
@@ -158,10 +222,12 @@
   }
   function close(){
     if(mode!=='map')return;
+    if(!treasure.hidden)return;
     if(!bag.hidden){closeBattleBag();return;}
     if(step){player=step.from;dog=step.dogFrom;step=null;}
     held=null;
     queuedDirection=null;
+    if(positionTimer)flushPosition();
     if(document.fullscreenElement===root)document.exitFullscreen().catch(()=>{});
     setMode('');
   }
@@ -233,7 +299,7 @@
   }
 
   function press(dir,token){
-    if(mode!=='map'||!bag.hidden)return;
+    if(mode!=='map'||paused())return;
     const now=performance.now();
     held={dir,token,next:now+250};
     if(step)queuedDirection=dir;
@@ -254,7 +320,7 @@
     });
   }
   window.addEventListener('keydown',e=>{
-    if(mode!=='map'||!bag.hidden||!keys[e.key]||e.altKey||e.ctrlKey||e.metaKey)return;
+    if(mode!=='map'||paused()||!keys[e.key]||e.altKey||e.ctrlKey||e.metaKey)return;
     e.preventDefault();
     if(!e.repeat)press(keys[e.key],e.key);
   });
@@ -267,6 +333,7 @@
     action.catch(()=>{});
   });
   document.addEventListener('fullscreenchange',()=>{
+    viewportDirty=true;
     fullscreen.setAttribute('aria-pressed',String(document.fullscreenElement===root));
   });
   window.openIbrahimExploration=open;
@@ -276,7 +343,7 @@
     get fighting(){return mode==='battle';},
     get walking(){return mode==='map';},
     openBag(){
-      if(mode!=='map')return;
+      if(mode!=='map'||paused())return;
       if(step){player=step.from;dog=step.dogFrom;step=null;}
       held=null;queuedDirection=null;
       window.openMapBag();

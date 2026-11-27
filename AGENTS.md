@@ -7,7 +7,7 @@
 - Use recursos locais para o jogo e inclua recursos essenciais no cache da PWA. Incremente a revisão do cache a cada atualização do conjunto publicado.
 - Mantenha apenas Ataque, Defesa, Ataque Duplo e Mochila no combate.
 - Teste em Chromium com toque e viewport móvel, incluindo os fluxos de batalha, dados anteriores, sons e navegação offline. Registre o que foi validado, as decisões e as pendências em `PROGRESSO.md`.
-- Para iniciar o app localmente, execute `python3 -m http.server 8310 --bind 127.0.0.1` na raiz. Com Chromium e Playwright disponíveis, execute `node scripts/test-phase1.cjs`. A variável `SCREENSHOTS` permite escolher onde salvar as capturas.
+- Para iniciar o app localmente, execute `python3 -m http.server 8313 --bind 127.0.0.1` na raiz. Com Chromium e Playwright disponíveis, execute `node scripts/test-phase1.cjs`. A variável `SCREENSHOTS` permite escolher onde salvar as capturas.
 
 ## Revisão 5
 
@@ -17,3 +17,11 @@
 - Preserve os identificadores persistentes das coletas. Conceda recompensas de vitória e de baú uma única vez e só volte ao mapa após CONTINUAR.
 - Valide o áudio com gestos de toque, suspensão e retomada, controle de música e execução offline. Diferencie análise de sinal em Chromium e audição em aparelho físico.
 - A Revisão 5 deve permanecer local até autorização expressa para o envio ao GitHub e a publicação de teste.
+
+## Revisão 6
+
+- A Revisão 6 parte de `10a76085f5004373c40b533f78785af86b69f1d7`. Preserve `main`, os guardiões, a capa da Fase 1 e os sistemas de batalha fora do ataque normal. Nova fase, push, merge e deploy dependem de autorização.
+- A caminhada usa 12 quadros de passada, um de repouso e dois de assentamento por pé. Preserve as coordenadas e a trilha do companheiro ao trocar os atlas.
+- Mantenha uma única cadeia de `requestAnimationFrame` no mapa. Agrupe gravações de deslocamento e grave coletas imediatamente com posição, inventário, saldo e identificação da recompensa. Preserve a pausa de entrada em mochila e tesouro.
+- Ao mudar a revisão, atualize o rótulo visível, a versão anunciada pelo worker, os parâmetros dos recursos e a chave de cache. Preserve `minhaAventuraKids_v1` e a identidade da PWA.
+- O servidor usado para o roteiro local é `python3 -m http.server 8313 --bind 127.0.0.1`. Rode `node scripts/test-phase1.cjs` e use `node scripts/benchmark-phase1.cjs URL` para medir a mesma rota em cada revisão.

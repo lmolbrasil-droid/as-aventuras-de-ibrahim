@@ -94,23 +94,58 @@
     try{await action(b);}
     finally{
       scene.dataset.motion='';
+      delete scene.dataset.normalStrike;
       effect.dataset.cue='';effect.dataset.guard='';
       busy=false;
       refresh();
     }
   }
-  function attack(double){
+  function normalAttack(){
     return run(async b=>{
-      if(double&&b.doubleUsed)return;
-      const combatPower=gamePower();
-      const total=double?combatPower*3+25:combatPower+Math.floor(Math.random()*7)+4;
-      const first=double?Math.max(1,Math.round(total*.43)):total;
-      const blows=double?[first,total-first]:[total];
-      story(double?'Ibrahim e seu fiel escudeiro preparam um golpe combinado.':'Ibrahim prepara o Corte Relâmpago.');
-      if(data.game.exploration.boss){
-        setEnemyPose('defend',0);
-      }
-      for(const [index,damage] of blows.entries()){
+      const damage=gamePower()+Math.floor(Math.random()*7)+4;
+      story('Ibrahim prepara o Corte Relâmpago.');
+      if(data.game.exploration.boss)setEnemyPose('defend',0);
+      scene.dataset.normalStrike='prepare';
+      setHeroPose('ready',0);
+      forestMusic.duck(2.5);
+      sound('normal-ready');
+      await wait(700);
+      scene.dataset.normalStrike='swing';
+      story('Corte Relâmpago!');
+      setHeroPose('attack',0);
+      sound('normal-swing');
+      await wait(500);
+
+      scene.dataset.normalStrike='impact';
+      setEnemyPose('hurt',0);
+      story(gameEnemy()[0]+' recebeu '+damage+' de dano.');
+      sound('normal-impact');
+      b.hp=Math.max(0,b.hp-damage);
+      b.attacks=(b.attacks||0)+1;
+      hitNumber(damage,'enemy');
+      refresh();
+      await wait(155);
+      sound('normal-recoil');
+      await wait(445);
+
+      scene.dataset.normalStrike='recover';
+      setHeroPose('idle',0);
+      await wait(700);
+      delete scene.dataset.normalStrike;
+      if(!b.hp){finish(b);return;}
+      b.pendingEnemy=true;
+      save();
+      await enemyTurn(b);
+    });
+  }
+  function doubleAttack(){
+    return run(async b=>{
+      if(b.doubleUsed)return;
+      const total=gamePower()*3+25;
+      const first=Math.max(1,Math.round(total*.43));
+      story('Ibrahim e seu fiel escudeiro preparam um golpe combinado.');
+      if(data.game.exploration.boss)setEnemyPose('defend',0);
+      for(const [index,damage] of [first,total-first].entries()){
         scene.dataset.motion=index?'companion-windup':'hero-windup';
         if(!index)setHeroPose('ready',0);
         await wait(index?410:460);
@@ -121,7 +156,7 @@
         b.hp=Math.max(0,b.hp-damage);hitNumber(damage,'enemy');refresh();
         await wait(index?680:610);
       }
-      b.doubleUsed=double||b.doubleUsed;
+      b.doubleUsed=true;
       b.attacks=(b.attacks||0)+1;
       setHeroPose('idle',0);
       if(!b.hp){finish(b);return;}
@@ -149,9 +184,17 @@
   function bag(mode,message=''){
     if(mode==='battle'&&(busy||!ready(current())))return;
     const map=mode==='map',inventory=data.game.inventory;
+    const opening=modal.hidden;
     const combat=data.game.combat,b=current();
     modal.dataset.mode=mode;
-    $('bagMessage').textContent=message||'Vida de Ibrahim: '+combat.hp+'/'+combat.maxHp;
+    $('bagMessage').textContent=message||(map?'':'Vida de Ibrahim: '+combat.hp+'/'+combat.maxHp);
+    if(map){
+      const meter=$('bagHealth');
+      meter.setAttribute('aria-valuemax',combat.maxHp);
+      meter.setAttribute('aria-valuenow',combat.hp);
+      meter.querySelector('i').style.width=(combat.hp/combat.maxHp*100)+'%';
+      meter.querySelector('.bag-health-track span').textContent=combat.hp+' / '+combat.maxHp;
+    }
     const items=$('battleBagItems');
     items.replaceChildren();
     for(const item of gameStore){
@@ -159,7 +202,11 @@
       const row=document.createElement('article');row.className='bag-item';
       const art=document.createElement('img');art.src=item.art;art.alt='';
       const copy=document.createElement('div');
-      const name=document.createElement('strong');name.textContent=item.name+' · '+quantity;
+      const name=document.createElement('strong');name.textContent=item.name;
+      const count=document.createElement('span');
+      count.className=map?'bag-quantity':'';
+      count.textContent=map?'×'+quantity:' · '+quantity;
+      name.append(count);
       const desc=document.createElement('small');desc.textContent=item.desc;
       copy.append(name,desc);
       const use=document.createElement('button');
@@ -171,17 +218,20 @@
       row.append(art,copy,use);items.append(row);
     }
     modal.hidden=false;
-    modal.querySelector('.bag-close').focus();
+    if(opening){
+      modal.querySelector('.bag-close').focus();
+      if(map)sound('bag-open');
+    }
   }
   function useItem(item,mode){
-    if(modal.hidden||modal.dataset.mode!==mode)return;
+    if(modal.hidden||modal.classList.contains('is-closing')||modal.dataset.mode!==mode)return;
     const id=item.id,inventory=data.game.inventory,combat=data.game.combat;
     if(!inventory[id]||isHeal(id)&&combat.hp>=combat.maxHp)return;
     if(mode==='map'){
       if(!window.forestWorld.walking||!isHeal(id))return;
       inventory[id]--;heal(id);save();renderShop();sound(id);
-      bag('map',item.name+' usado. Vida: '+combat.hp+'/'+combat.maxHp+'.');
-      $('bagMessage').animate([{color:'#2a7552'},{color:'inherit'}],900);
+      bag('map',item.name+' usado.');
+      modal.querySelector('.bag-close').focus();
       return;
     }
     return run(async b=>{
@@ -212,13 +262,34 @@
     });
   }
 
-  window.attackGuardian=()=>attack(false);
-  window.doubleStrike=()=>attack(true);
+  window.attackGuardian=normalAttack;
+  window.doubleStrike=doubleAttack;
   window.defendGuardian=defend;
   window.openBattleBag=()=>bag('battle');
   window.openMapBag=()=>bag('map');
+  window.closeBattleBag=()=>{
+    if(modal.hidden||modal.classList.contains('is-closing'))return;
+    const map=modal.dataset.mode==='map';
+    const finish=()=>{
+      modal.hidden=true;
+      modal.classList.remove('is-closing');
+      $(map?'mapBagBtn':'bagBtn').focus({preventScroll:true});
+    };
+    if(!map){finish();return;}
+    modal.classList.add('is-closing');
+    sound('bag-close');
+    setTimeout(finish,170);
+  };
   window.refreshForestBattle=refresh;
   window.resumeForestTurn=()=>{if(current()?.pendingEnemy)run(enemyTurn);};
   $('mapBagBtn').addEventListener('click',()=>window.forestWorld.openBag());
-  modal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();closeBattleBag();}});
+  modal.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.stopPropagation();closeBattleBag();}
+    if(e.key!=='Tab')return;
+    const buttons=[...modal.querySelectorAll('button:not(:disabled)')];
+    const end=e.shiftKey?buttons[0]:buttons.at(-1);
+    if(document.activeElement!==end)return;
+    e.preventDefault();
+    (e.shiftKey?buttons.at(-1):buttons[0]).focus();
+  });
 })();

@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const {chromium, devices} = require('playwright');
-const url = process.env.BASE_URL || 'http://127.0.0.1:8310';
+const url = process.env.BASE_URL || 'http://127.0.0.1:8313';
 const screenshots = process.env.SCREENSHOTS;
 const legacyDay = '2024-01-02';
 const legacyBattle = {stage:1,hp:13,attacks:1};
@@ -81,6 +81,7 @@ async function route(page, target){
     await page.waitForFunction(({x,y})=>data.game.exploration.player?.x===x&&data.game.exploration.player?.y===y,
       move,{timeout:2000});
     await roundTrip(page,move);
+    if(await page.locator('#forestTreasure').isVisible())await page.locator('#treasureContinue').click();
   }
 }
 async function openIntro(page, name, filename, trigger){
@@ -127,6 +128,13 @@ async function run(){
         }
         return connect.call(this,destination,...args);
       };
+      const startNoise=AudioBufferSourceNode.prototype.start;
+      window.strikeAudio=[];
+      AudioBufferSourceNode.prototype.start=function(...args){
+        const phase=document.getElementById('battleScene')?.dataset.normalStrike;
+        if(phase&&[.44,.4,.22,.24].some(seconds=>Math.abs(seconds-args[2])<.0001))strikeAudio.push([phase,Number(args[2].toFixed(2))]);
+        return startNoise.apply(this,args);
+      };
       const random=Math.random;
       Math.random=()=>typeof window.dice==='number'?window.dice:random();
     },{saveKey,legacyDay,legacyBattle});
@@ -137,6 +145,7 @@ async function run(){
     await page.goto(url);
     await page.locator('#appLaunchSplash.done').waitFor();
     await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
+    assert.equal(await page.locator("#appRevision").textContent(),"Revisão 6");
     assert.equal(await page.evaluate(()=>document.querySelector('[data-phase-art] img').naturalWidth),1671);
     const old=await page.evaluate(day=>({
       coins:data.coins, diamonds:data.game.diamonds, days:data.days[day], battle:data.game.dailyBattle[day],
@@ -173,12 +182,15 @@ async function run(){
     await page.waitForTimeout(250);
     assert.deepEqual(await position(page),beforeBag);
     assert.ok(await page.getByRole('button',{name:'Usar Doce do Sono'}).isDisabled());
+    await snapshot(page,'mochila-antes-da-cura');
     await page.getByRole('button',{name:'Usar Remédio'}).tap();
     assert.equal(await page.evaluate(()=>data.game.combat.hp),85);
+    assert.equal(await page.locator('#bagHealth').getAttribute('aria-valuenow'),'85');
     await page.getByRole('button',{name:'Usar Cura',exact:true}).tap();
     assert.equal(await page.evaluate(()=>data.game.combat.hp),120);
     await snapshot(page,'mochila-mapa');
     await page.getByRole('button',{name:'Fechar mochila'}).tap();
+    await hidden(page,'#battleBagModal');
     const bounds=await page.locator('#ibrahimGame').boundingBox();
     assert.equal(bounds.height,devices['Pixel 7'].viewport.height);
     await page.locator('[data-move=right]').tap();
@@ -188,14 +200,14 @@ async function run(){
       const c=document.createElement('canvas');c.width=100;c.height=100;
       const ctx=c.getContext('2d');
       return ['hero','dog'].map(name=>['up','down','left','right'].map(dir=>{
-        const frames=Array.from({length:8},(_,i)=>{
+        const frames=Array.from({length:12},(_,i)=>{
           ctx.clearRect(0,0,100,100);forestSprites.draw(ctx,name,50,75,dir,i);
           return c.toDataURL();
         });
         return new Set(frames).size;
       }));
     });
-    assert.ok(atlas.flat().every(n=>n>=6));
+    assert.ok(atlas.flat().every(n=>n>=10));
     const obstacle=await page.evaluate(()=>{
       const start=data.game.exploration.player;
       const directions=[['ArrowUp',0,-1],['ArrowLeft',-1,0],['ArrowDown',0,1],['ArrowRight',1,0]];
@@ -252,11 +264,28 @@ async function run(){
     await page.locator('#battleBagItems .bag-item').first().getByRole('button').tap();
     await page.waitForFunction(()=>!document.getElementById('attackBtn').disabled);
     assert.ok((await page.evaluate(()=>data.game.inventory.medicine))>=1);
+    const strikeAt=await page.evaluate(()=>{
+      window.strikeTrace=[];
+      const stage=document.querySelector('#battleScene');
+      new MutationObserver(()=>{
+        if(stage.dataset.normalStrike)strikeTrace.push([stage.dataset.normalStrike,performance.now(),data.game.dailyBattle[todayKey].hp]);
+      }).observe(stage,{attributeFilter:['data-normal-strike']});
+      return performance.now();
+    });
     await page.locator('#attackBtn').tap();
+    assert.ok(await page.locator('#doubleBtn').isDisabled());
+    await page.evaluate(()=>attackGuardian()); // An attempted duplicate while locked.
     await waitAsset(page,'ogre-hurt.webp');
+    await snapshot(page,'impacto-ogro');
     const afterNormal=await page.evaluate(()=>data.game.dailyBattle[todayKey].hp);
     assert.equal(afterNormal,16);
     await page.waitForFunction(()=>!document.getElementById('doubleBtn').disabled);
+    const strikeTrace=await page.evaluate(()=>strikeTrace);
+    assert.deepEqual(strikeTrace.map(beat=>beat[0]),['prepare','swing','impact','recover']);
+    assert.deepEqual(strikeTrace.map(beat=>beat[2]),[32,32,16,16]);
+    assert.ok(strikeTrace[2][1]-strikeTrace[0][1]>=1100);
+    assert.ok(strikeTrace[3][1]-strikeAt>=1700);
+    assert.deepEqual(await page.evaluate(()=>strikeAudio),[['prepare',.44],['swing',.4],['impact',.22],['impact',.24]]);
     await page.locator('#bagBtn').tap();
     await page.getByRole('button',{name:'Usar Doce do Sono'}).tap();
     await page.waitForFunction(()=>data.game.dailyBattle[todayKey].sleepTurns===2&&!document.querySelector('#defendBtn').disabled);
@@ -298,6 +327,12 @@ async function run(){
     assert.notDeepEqual(bossAudio,mapAudio);
     assert.notDeepEqual(bossAudio,ogreAudio);
     await snapshot(page,'combate-arborian');
+    await page.locator('#attackBtn').tap();
+    await waitAsset(page,'arborian/hurt.webp');
+    await snapshot(page,'impacto-arborian');
+    await page.waitForFunction(()=>!document.querySelector('#defendBtn').disabled);
+    assert.ok(await page.evaluate(()=>data.game.dailyBattle[todayKey].hp<40));
+
     await page.locator('#bagBtn').tap();
     await page.getByRole('button',{name:'Usar Doce do Sono'}).tap();
     await page.waitForFunction(()=>data.game.dailyBattle[todayKey].sleepTurns===2&&!document.querySelector('#defendBtn').disabled);
@@ -341,7 +376,7 @@ async function run(){
     await page.reload();
     await page.waitForFunction(async()=>{
       const names=await caches.keys();
-      return !!navigator.serviceWorker.controller&&names.includes('ibrahim-v153-phase1-r5')&&
+      return !!navigator.serviceWorker.controller&&names.includes('ibrahim-v154-phase1-r6')&&
         names.includes('outro-app')&&!names.includes('ibrahim-test-obsoleto');
     },null,{timeout:10000});
     const manifest=await context.request.get(url+'/manifest-v143.webmanifest');
