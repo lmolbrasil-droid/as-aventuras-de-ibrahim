@@ -326,7 +326,7 @@ main{background:transparent!important}
 <div id="normalStrikeFx" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 <div class="scene-glow"></div>
 <div class="battle-team">
-<div class="hero-stage" id="gameHero"><img alt="Ibrahim, herói aventureiro" id="heroSprite" src="assets/poses-r10-ibrahim/idle.webp"/></div>
+<div class="hero-stage" id="gameHero"><img alt="Ibrahim, herói aventureiro" id="heroSprite" src="assets/poses-r13-ibrahim/idle.webp"/></div>
 <div class="pet-stage" id="gameCompanion"><img id="companionSprite" src="assets/poses-r8-aprovadas/dog/idle.webp" alt="Companheiro cachorro em corpo inteiro"></div>
 </div><div class="mount-badge" hidden="" id="mountBadge"></div>
 <div class="enemy-stage" id="gameMonster"><img alt="" id="enemySprite"/><div class="ogre-stars" aria-hidden="true"><i>✦</i><i>✧</i><i>✦</i></div></div>
@@ -603,7 +603,7 @@ function gamePower(){
  return 12+["weapon","pet","armor"].reduce((v,k)=>{let it=gameStore.find(x=>x.id===data.game.equipped[k]);return v+(it?it.power:0)},0)+(captured?3:0);
 }
 function combatArt(character,pose){
- const folder=character==="hero"?"poses-r10-ibrahim":"poses-r8-aprovadas/"+character;
+ const folder=character==="hero"?(pose==="defeated"?"poses-r10-ibrahim":"poses-r13-ibrahim"):"poses-r8-aprovadas/"+character;
  return "assets/"+folder+"/"+pose+".webp";
 }
 function showSprite(id,src){
