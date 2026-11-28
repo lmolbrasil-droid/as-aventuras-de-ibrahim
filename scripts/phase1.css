@@ -551,3 +551,28 @@ body.world-open { overflow: hidden; }
 #ibrahimGame.in-encounter .battle-menu .command-name {font-size:1.3em;}
 .battle-victory-overlay:not(.boss-victory) .victory-team img {animation:none;}
 #ibrahimGame.in-encounter #doubleBtn .command-name {display:block;line-height:.93;}
+
+#ibrahimGame.in-encounter .battle-menu button {
+  display:flex;
+  flex-direction:row;
+  justify-content:center;
+  align-items:center;
+  gap:9px;
+}
+#ibrahimGame.in-encounter .battle-menu button > :is(svg,img) {flex:none;}
+
+/* Center the painted content, compensating for the transparent icon padding. */
+#ibrahimGame.in-encounter .battle-menu button > * {
+  translate:var(--command-center-offset,0px) 0;
+}
+#ibrahimGame.in-encounter #attackBtn {--command-center-offset:-1.5px;}
+#ibrahimGame.in-encounter #defendBtn {--command-center-offset:-1.75px;}
+#ibrahimGame.in-encounter #doubleBtn {--command-center-offset:-.75px;}
+#ibrahimGame.in-encounter #bagBtn {--command-center-offset:-2.75px;}
+@media(max-width:380px){
+  #ibrahimGame.in-encounter #doubleBtn {--command-center-offset:-.4px;}
+  #ibrahimGame.in-encounter #doubleBtn .command-name {width:min-content;margin-inline:auto;}
+}
+@media(max-width:350px){
+  #ibrahimGame.in-encounter #bagBtn {--command-center-offset:-2.35px;}
+}

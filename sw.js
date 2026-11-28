@@ -40,12 +40,12 @@ const CORE = [
   './assets/poses-r10-ibrahim/idle.webp',
   './assets/poses-r10-ibrahim/ready.webp',
   './assets/poses-r10-ibrahim/recover.webp',
-  './assets/poses-r10-ibrahim/victory.webp', './assets/ibrahim-vitoria-dentes-r11.webp',
+  './assets/poses-r10-ibrahim/victory.webp', './assets/ibrahim-vitoria-ogro-r7.png',
   './assets/sfx_sword.wav', './assets/sfx_enemy.wav', './assets/sfx_shield.wav',
   './assets/sfx_skill.wav', './assets/sfx_win.wav'
 ];
 const INTEGRITY = {
-  './scripts/phase1.css?v=11': 'sha384-zWlvs10x7o7zZlwq2354ue3qS9hZ95Nlpa8pq6CNtWtlKh/8Sr/ROCvjnd5t0xDn',
+  './scripts/phase1.css?v=11': 'sha384-CrhqhNPjMXCMxwBybJdCiPVG4z3IFLfaA/ua9WTsmK97CSo3Lzjxdm1ttVoXdbo1',
   './scripts/phase1-music.js?v=11': 'sha384-w8cmsKNQyYc6UsZtbdLR9p6p3DDoTicdTg8mH4Xm8WYcWMg/TX3Ek3fj7vxC481J',
   './scripts/phase1-sprites.js?v=11': 'sha384-ioSz1nNEP6I112RvNFQz5Mf7HYK4lViDhvwb8kAUG9J6MO8U5UYs+3S3KZMqxyRt',
   './scripts/phase1-terrain.js?v=11': 'sha384-g4gJTOJRO2vdQqTf7W3drU4FfxsStmNYHjKuG4FTxDK4Rgpaa9H5R7h0jT9plW0k',
