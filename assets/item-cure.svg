@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><defs><linearGradient id="v" x2="0" y2="1"><stop stop-color="#fff0ad"/><stop offset="1" stop-color="#d47c36"/></linearGradient></defs><path fill="#172e43" d="M0 0h160v160H0z"/><path fill="#294b5d" d="M12 12h136v136H12z" stroke="#d5bd7c" stroke-width="4"/><path d="M56 30h48v15H56z" fill="#c5d5dc"/><path d="M63 45h34v78q-17 18-34 0Z" fill="url(#v)" stroke="#f4e6b8" stroke-width="5"/><path d="M80 62v42m-21-21h42" stroke="#fff8dc" stroke-width="9" stroke-linecap="round"/><path d="M104 45l15-12 9 10-15 13" fill="#e7c98b"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140">
+ <defs>
+  <linearGradient id="gold"><stop stop-color="#6d4225"/><stop offset=".23" stop-color="#ffdb88"/><stop offset=".46" stop-color="#95613b"/><stop offset=".75" stop-color="#f5b960"/><stop offset="1" stop-color="#563327"/></linearGradient>
+  <linearGradient id="gem" x2=".8" y2="1"><stop stop-color="#f8ffe0"/><stop offset=".25" stop-color="#83f2ed"/><stop offset=".57" stop-color="#3d88c6"/><stop offset="1" stop-color="#163767"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#b0fff7" stop-opacity=".7"/><stop offset="1" stop-color="#86ffe3" stop-opacity="0"/></radialGradient>
+ </defs>
+ <ellipse cx="101" cy="123" rx="37" ry="8" fill="#091524" opacity=".65"/>
+ <circle cx="100" cy="78" r="59" fill="url(#glow)"/>
+ <path d="M88 17q0-12 12-12t12 12v7h-6v-7q0-6-6-6t-6 6v7h-6z" fill="url(#gold)"/>
+ <path d="M85 21h30v14l12 15 6 42-14 25-19 8-19-8-14-25 6-42 12-15z" fill="url(#gold)" stroke="#563832" stroke-width="2"/>
+ <path d="M87 45h26l10 10 5 35-13 21-15 7-15-7-13-21 5-35z" fill="url(#gem)" stroke="#315e79" stroke-width="2"/>
+ <path d="M100 47l16 16 3 31-19 22-19-22 3-31z" fill="#91ffe5" opacity=".32"/>
+ <path d="M85 61l15 10 15-10M84 96l16-25 16 25" fill="none" stroke="#e5ffed" opacity=".55"/>
+ <path d="M96 67h8v10h10v8h-10v11h-8V85H86v-8h10z" fill="#fff7bf" stroke="#fff" opacity=".95"/>
+ <rect x="83" y="30" width="34" height="8" rx="2" fill="url(#gold)" stroke="#62472e"/>
+ <path d="M74 54l3 10 10 3-10 2-3 10-2-10-10-2 10-3z" fill="#fffbd5"/>
+</svg>

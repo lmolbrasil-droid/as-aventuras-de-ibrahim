@@ -1,1 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#a7f0d0"/><stop offset="1" stop-color="#227e70"/></linearGradient></defs><path fill="#172e43" d="M0 0h160v160H0z"/><path fill="#294b5d" d="M12 12h136v136H12z" stroke="#d5bd7c" stroke-width="4"/><path d="M58 30h44v15H58z" fill="#c6b18a"/><rect x="48" y="42" width="64" height="84" rx="16" fill="url(#b)" stroke="#e7d6a3" stroke-width="5"/><path d="M80 57v50M55 82h50" stroke="#f7f2d5" stroke-width="13" stroke-linecap="round"/><path d="M60 117q20 12 40 0" fill="none" stroke="#1b5b50" stroke-width="5"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140">
+ <defs>
+  <linearGradient id="glass"><stop stop-color="#245354"/><stop offset=".22" stop-color="#8ed7c0"/><stop offset=".43" stop-color="#e5ffdb"/><stop offset=".74" stop-color="#64a99b"/><stop offset="1" stop-color="#132f39"/></linearGradient>
+  <linearGradient id="liquid" x2=".9" y2="1"><stop stop-color="#fff899"/><stop offset=".27" stop-color="#a2dc53"/><stop offset=".7" stop-color="#477f25"/><stop offset="1" stop-color="#19442e"/></linearGradient>
+  <linearGradient id="cork"><stop stop-color="#543027"/><stop offset=".33" stop-color="#d39b5e"/><stop offset=".62" stop-color="#a66b43"/><stop offset="1" stop-color="#513022"/></linearGradient>
+  <linearGradient id="label" x2="0" y2="1"><stop stop-color="#fff2b7"/><stop offset="1" stop-color="#bb8650"/></linearGradient>
+ </defs>
+ <ellipse cx="103" cy="122" rx="47" ry="9" fill="#081421" opacity=".64"/>
+ <path d="M85 41h31v23c25 7 35 24 29 43-4 13-21 16-45 16s-41-3-45-16c-6-19 4-36 30-43z" fill="url(#glass)" stroke="#204b49" stroke-width="2"/>
+ <path d="M60 93c16-9 25 6 43 1 17-5 26-8 39-3 4 21-11 27-41 27S58 112 60 93z" fill="url(#liquid)"/>
+ <path d="M74 82q-12 9-9 19M84 72q7-3 9-23" fill="none" stroke="#eaffdb" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+ <path d="M82 23h37l-4 21H86z" fill="url(#cork)" stroke="#643d2d"/>
+ <ellipse cx="100.5" cy="23" rx="18.5" ry="4" fill="#d6a371"/>
+ <rect x="81" y="40" width="39" height="10" rx="4" fill="url(#glass)" stroke="#3a7162"/>
+ <path d="M78 86q22-6 45 0l-5 22q-17 6-34 0z" fill="url(#label)" stroke="#765834"/>
+ <path d="M100 103q-2-11 9-14 4 9-9 14m0 0q-10-1-11-10 11-1 11 10" fill="#4f7b38"/>
+ <circle cx="130" cy="98" r="2.5" fill="#d5f788" opacity=".75"/>
+</svg>

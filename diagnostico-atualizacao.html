@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico de atualização | As Aventuras de Ibrahim</title>
+<style>
+body{max-width:48rem;margin:0 auto;padding:1.2rem;background:#192923;color:#fbecd0;font:1rem/1.5 system-ui,sans-serif}
+button,a{color:#ffdc8c}button{padding:.5rem .8rem;border:1px solid #bea16c;border-radius:.4rem;background:#33291d;font:inherit}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #735f45;border-radius:.45rem;padding:1rem;background:#111f1b}
+</style>
+</head>
+<body>
+<h1>Diagnóstico de atualização</h1>
+<p>Compare este relatório ao abrir o mesmo endereço no Chrome e no navegador interno. A consulta usa a rede para identificar os arquivos que o endereço está servindo. O progresso do jogo fica intacto.</p>
+<button id="repeat" type="button">Medir novamente</button>
+<a href="./">Voltar ao jogo</a>
+<pre id="report" aria-live="polite">Medindo…</pre>
+<script>
+const report=document.getElementById('report');
+const repeat=document.getElementById('repeat');
+
+function activeRevision(worker){
+  if(!worker)return Promise.resolve('sem controle nesta aba');
+  return new Promise(resolve=>{
+    const timeout=setTimeout(()=>finish('sem resposta'),1100);
+    function receive(event){
+      if(event.source===worker&&event.data?.type==='ibrahim-revision')finish(event.data.revision);
+    }
+    function finish(value){
+      clearTimeout(timeout);
+      navigator.serviceWorker.removeEventListener('message',receive);
+      resolve(value);
+    }
+    navigator.serviceWorker.addEventListener('message',receive);
+    worker.postMessage({type:'ibrahim-revision'});
+  });
+}
+
+async function inspect(path,parse){
+  const url=new URL(path,location.href);
+  url.searchParams.set('diagnostico',Date.now());
+  try{
+    const response=await fetch(url,{cache:'no-store'});
+    const headers=['cache-control','age','etag','x-nf-request-id'];
+    return {url:response.url,status:response.status,
+      resultado:response.ok?await parse(response):'resposta sem sucesso',
+      cabecalhos:Object.fromEntries(headers.map(name=>[name,response.headers.get(name)]))};
+  }catch(error){return {url:url.href,erro:error.message};}
+}
+
+function htmlRevision(text){
+  const page=new DOMParser().parseFromString(text,'text/html');
+  return page.querySelector('meta[name="ibrahim-revision"]')?.content||
+    page.querySelector('#appRevision')?.textContent||'sem identificação';
+}
+
+async function workerRevision(response){
+  return (await response.text()).match(/const REVISION\s*=\s*(\d+)/)?.[1]||'sem identificação';
+}
+
+async function worldDigest(response){
+  const buffer=await response.arrayBuffer();
+  const checksum=await crypto.subtle.digest('SHA-384',buffer);
+  return 'sha384-'+btoa(String.fromCharCode(...new Uint8Array(checksum)));
+}
+
+async function measure(){
+  repeat.disabled=true;report.textContent='Medindo…';
+  try{
+    const sw=navigator.serviceWorker;
+    const [registration,active,keys,html,servedWorker,script]=await Promise.all([
+      sw?.getRegistration(),activeRevision(sw?.controller),window.caches?.keys(),
+      inspect('./index.html',async response=>htmlRevision(await response.text())),
+      inspect('./sw.js',workerRevision),
+      inspect('./scripts/phase1-world.js',worldDigest)
+    ]);
+    report.textContent=JSON.stringify({
+      origem:location.origin,
+      navegador:navigator.userAgent,
+      modo:matchMedia('(display-mode: standalone)').matches?'instalado':'navegador',
+      workerDaAba:active,
+      aguardando:registration?.waiting?.state||null,
+      escopo:registration?.scope||null,
+      cachesDoJogo:(keys||[]).filter(name=>name.startsWith('ibrahim-')),
+      htmlDaRede:html,workerDaRede:servedWorker,scriptDoMapaDaRede:script
+    },null,2);
+  }catch(error){report.textContent='Falha no diagnóstico: '+error.message;}
+  finally{repeat.disabled=false;}
+}
+repeat.addEventListener('click',measure);
+measure();
+</script>
+</body>
+</html>

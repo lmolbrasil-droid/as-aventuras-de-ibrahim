@@ -1,1 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><path fill="#172e43" d="M0 0h160v160H0z"/><path fill="#294b5d" d="M12 12h136v136H12z" stroke="#d5bd7c" stroke-width="4"/><path d="M35 38 122 122M122 38 35 122" stroke="#c9a76c" stroke-width="9" stroke-linecap="round"/><path d="M35 38 122 122M122 38 35 122M58 30 30 58m72-28 28 28M30 102l28 28m72-28-28 28" stroke="#e7d7a5" stroke-width="4"/><path d="M35 38 80 80 122 38M35 122 80 80l42 42" fill="none" stroke="#a5d1bb" stroke-width="4"/><circle cx="80" cy="80" r="12" fill="#d9c17c" stroke="#fff0c2" stroke-width="4"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140">
+ <defs>
+  <linearGradient id="wood"><stop stop-color="#57352e"/><stop offset=".4" stop-color="#bc7847"/><stop offset=".57" stop-color="#ddae66"/><stop offset="1" stop-color="#6b4535"/></linearGradient>
+  <linearGradient id="brass" x2="1" y2="1"><stop stop-color="#fff1a5"/><stop offset=".35" stop-color="#ad7847"/><stop offset=".61" stop-color="#eec67a"/><stop offset="1" stop-color="#654331"/></linearGradient>
+  <pattern id="mesh" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><path d="M0 0h9v9" fill="none" stroke="#e3d6a6" stroke-width="1.2"/><circle cx="0" cy="0" r="1.2" fill="#fff2c0"/></pattern>
+ </defs>
+ <ellipse cx="102" cy="120" rx="54" ry="8" fill="#071723" opacity=".65"/>
+ <g transform="rotate(41 101 72)">
+  <rect x="95" y="65" width="12" height="67" rx="5" fill="url(#wood)" stroke="#503733" stroke-width="2"/>
+  <path d="M95 113l12 4m-12 1l12 4m-12 1l11 4" stroke="#4e513c" stroke-width="3"/>
+  <path d="M66 35q-6 33 15 47 17 11 42-1 18-16 12-46z" fill="#0c2232" opacity=".65"/>
+  <path d="M66 35q-6 33 15 47 17 11 42-1 18-16 12-46z" fill="url(#mesh)" stroke="#c5a676" stroke-width="2"/>
+  <ellipse cx="101" cy="37" rx="36" ry="20" fill="#183643" fill-opacity=".46" stroke="#664332" stroke-width="10"/>
+  <ellipse cx="101" cy="36" rx="35" ry="19" fill="url(#mesh)" stroke="url(#brass)" stroke-width="6"/>
+  <ellipse cx="101" cy="35" rx="36" ry="20" fill="none" stroke="#f0dca5" stroke-width="1" opacity=".75"/>
+  <path d="M93 84h16l-2 14H95z" fill="url(#brass)" stroke="#674732"/>
+ </g>
+</svg>

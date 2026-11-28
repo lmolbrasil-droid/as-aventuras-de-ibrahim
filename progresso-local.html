@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Backup de progresso</title>
+<style>
+body{max-width:36rem;margin:auto;padding:1.5rem;background:#192922;color:#ffe8b3;font:1rem/1.55 system-ui,sans-serif}
+section{border-top:1px solid #92764c;margin-top:1.5rem;padding-top:1rem}
+a{color:#ffe8b3}
+input{max-width:100%;font:inherit}
+[hidden]{display:none!important}
+button{display:block;margin:.8rem 0;padding:.55rem .85rem;border:1px solid #a78650;border-radius:.5rem;background:#364c3a;color:#fff3d4;font:inherit}
+</style>
+</head>
+<body>
+<a href="./">Voltar ao jogo</a>
+<h1>Backup de progresso</h1>
+<p>Feche outras abas do jogo antes de importar. O arquivo fica no seu dispositivo.</p>
+<button id="export" type="button">Baixar progresso deste endereço</button>
+<section>
+<label for="file">Arquivo de progresso</label><br>
+<input id="file" type="file" accept=".json,application/json">
+<button id="import" type="button">Verificar arquivo</button>
+<p id="summary" role="status"></p>
+<button id="apply" type="button" hidden>Substituir progresso neste endereço</button>
+</section>
+<script>
+const key='minhaAventuraKids_v1', format='as-aventuras-de-ibrahim';
+const summary=document.querySelector('#summary'), apply=document.querySelector('#apply');
+const file=document.querySelector('#file');
+let candidate,checkedValue;
+const map=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
+const count=value=>Number.isSafeInteger(value)&&value>=0;
+
+function validate(data){
+  if(!map(data)||!map(data.days)||!Object.values(data.days).every(missions=>
+    Array.isArray(missions)&&missions.every(count)))throw Error('Histórico de missões inválido.');
+  if(data.coins!==undefined&&!count(data.coins))throw Error('Saldo inválido.');
+  if(data.game!==undefined&&(!map(data.game)||!count(data.game.diamonds??0)))throw Error('Dados do jogo inválidos.');
+  for(const name of ['owned','wonStages','capturedCompanions']){
+    if(data.game?.[name]!==undefined&&!Array.isArray(data.game[name]))throw Error('Lista de inventário ou fases inválida.');
+  }
+  for(const name of ['inventory','exploration','combat','dailyBattle','equipped']){
+    if(data.game?.[name]!==undefined&&!map(data.game[name]))throw Error('Dados de progresso inválidos.');
+  }
+  const queue=[data];
+  for(let i=0;i<queue.length;i++){
+    const value=queue[i];
+    if(typeof value==='string'&&/<\/?[a-z!][^>]*>/i.test(value))throw Error('Texto inesperado no backup.');
+    if(value&&typeof value==='object'){
+      for(const [key,item] of Object.entries(value)){
+        if(['__proto__','prototype','constructor'].includes(key))throw Error('Campo inválido no backup.');
+        queue.push(item);
+      }
+    }
+  }
+  return data;
+}
+function download(data,suffix){
+  const url=URL.createObjectURL(new Blob([JSON.stringify({format,version:1,data})],{type:'application/json'}));
+  const link=document.createElement('a');
+  link.href=url;
+  link.download='ibrahim-progresso-'+suffix+'.json';
+  link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+document.querySelector('#export').onclick=()=>{
+  try{
+    const raw=localStorage.getItem(key);
+    if(!raw)throw Error('Nenhum progresso salvo neste endereço.');
+    download(validate(JSON.parse(raw)),'backup');
+    summary.textContent='Backup preparado.';
+  }catch(error){summary.textContent=error.message;}
+};
+file.onchange=()=>{candidate=null;apply.hidden=true;summary.textContent='';};
+document.querySelector('#import').onclick=async()=>{
+  candidate=null;apply.hidden=true;
+  try{
+    const selected=file.files[0];
+    if(!selected||selected.size>4000000)throw Error('Escolha um arquivo de backup de até 4 MB.');
+    const backup=JSON.parse(await selected.text());
+    if(file.files[0]!==selected)return;
+    if(backup?.format!==format||backup.version!==1)throw Error('Formato de backup desconhecido.');
+    candidate=validate(backup.data);
+    checkedValue=localStorage.getItem(key);
+    summary.textContent='Backup válido. '+Object.keys(candidate.days).length+' dias registrados, '+(candidate.coins??0)+' moedas e '+(candidate.game?.diamonds??0)+' diamantes. A importação substitui o progresso atual e baixa uma cópia dele, se houver.';
+    apply.hidden=false;
+  }catch(error){summary.textContent=error.message;}
+};
+apply.onclick=()=>{
+  if(!candidate)return;
+  try{
+    const before=localStorage.getItem(key);
+    if(before!==checkedValue)throw Error('O progresso mudou desde a verificação. Confira o arquivo novamente.');
+    if(before)download(JSON.parse(before),'anterior-a-importacao');
+    localStorage.setItem(key,JSON.stringify(candidate));
+    candidate=null;apply.hidden=true;
+    summary.textContent='Progresso importado. Volte ao jogo para conferir.';
+  }catch(error){summary.textContent=error.message;}
+};
+</script>
+</body>
+</html>
