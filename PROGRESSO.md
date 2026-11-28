@@ -305,3 +305,9 @@ Arquivos modificados em `index.html`, `scripts/phase1.css`, `scripts/phase1-spri
 Implementação local, sem push, merge, alteração de `main`, publicação, serviço pago ou trabalho na Fase 2. Evidências em `/workspace/shared/downloads/revisao-11`.
 
 A regressão em Chromium desktop e Pixel 7 emulado passou, incluindo os dois combates, recompensas únicas, persistência, funcionamento offline e tela cheia. O ensaio visual registrou 24 amostras sem deslocamento dos personagens após a entrada original do cartão, confirmou o retorno pelo botão CONTINUAR e verificou que a animação original segue ativa na vitória de Arborian. As capturas foram comparadas com a R10 local. Os prints citados não foram anexados ao pedido, e a posição de repouso da R10 foi usada como referência da composição estática.
+
+## Revisão 14 · cachorro no mapa
+
+Base `7b53dd6ee843a211413f85e135129c27c6d86de2`. A caminhada usa os quadros do atlas aprovado numa ordem de apoio, avanço e retorno ao apoio por direção. A fase acompanha o deslocamento do cachorro dentro de cada passo. Ao parar, o cachorro volta ao quadro de repouso. A escala de desenho no mapa passou de 0,73 para 0,5475, com o mesmo ponto de apoio e sombra proporcional. As posições na grade e o rastro do companheiro permanecem os mesmos.
+
+A comparação local em 393 × 830 CSS px exercitou as quatro direções, curvas, paradas e retomadas. A captura do canvas confirmou 25% de redução nos dois eixos, ponto de apoio estável e distância de uma casa depois de cada parada. A regressão cobre as quatro direções e os fluxos de jogo. Os dois hashes dos scripts de mapa foram atualizados para o cache offline. A entrega aguarda aprovação visual.

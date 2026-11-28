@@ -203,11 +203,12 @@
         weight:actor.travel===from.travel?0:fade*turnWeight
       };
     }
-    const heroPose=pose(player,step?.from),dogPose=pose(dog,step?.dogFrom);
+    const heroPose=pose(player,step?.from);
+    const dogMoving=step&&dog.travel!==step.dogFrom.travel;
     ctx.setTransform(zoom*ratio,0,0,zoom*ratio,-camera.x*zoom*ratio,-camera.y*zoom*ratio);
     terrain.draw(ctx,view,[
       ...forestLoot.actors(ctx,time,view),
-      {...d,draw:()=>forestSprites.draw(ctx,'dog',d.x,d.y,dogPose.dir,dogPose)},
+      {...d,draw:()=>forestSprites.draw(ctx,'dog',d.x,d.y,dog.dir,dogMoving?{progress:tween}:null)},
       {...p,draw:()=>forestSprites.draw(ctx,'hero',p.x,p.y,heroPose.dir,heroPose)}
     ],time);
     frameId=requestAnimationFrame(draw);

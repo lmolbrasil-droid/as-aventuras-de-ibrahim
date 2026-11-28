@@ -200,8 +200,10 @@ async function run(){
       const c=document.createElement('canvas');c.width=100;c.height=100;
       const ctx=c.getContext('2d');
       return ['hero','dog'].map(name=>['up','down','left','right'].map(dir=>{
-        const frames=Array.from({length:name==="hero"?8:7},(_,i)=>{
-          ctx.clearRect(0,0,100,100);forestSprites.draw(ctx,name,50,75,dir,{distance:i*80/(name==="hero"?8:7)+.5,weight:1});
+        const steps=name==="hero"?8:7;
+        const frames=Array.from({length:steps},(_,i)=>{
+          const pose=name==="hero"?{distance:i*80/steps+.5,weight:1}:{progress:(i+.5)/(steps+1)};
+          ctx.clearRect(0,0,100,100);forestSprites.draw(ctx,name,50,75,dir,pose);
           return c.toDataURL();
         });
         return new Set(frames).size;
